@@ -63,8 +63,8 @@ void Tokenizer::ReadQuotedString() {
         if (c == '\\') {
             value << static_cast<char>(token_stream.get());
             c = token_stream.peek();
-            if (c != '"' || c != '\\') {
-                std::cerr << "Invalid char after '\'" << std::endl;
+            if (c != '"' && c != '\\') {
+                std::cerr << "Invalid char after '\\' " << c << std::endl;
                 std::abort();
             }
         }
