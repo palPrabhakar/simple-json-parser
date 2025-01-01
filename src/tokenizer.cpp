@@ -3,6 +3,7 @@
 #include <exception>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 
 void Tokenizer::Advance() {
     if (next_token.type == TokenType::end)
@@ -43,6 +44,11 @@ void Tokenizer::Advance() {
         }
         case ':': {
             next_token.type = TokenType::colon;
+            token_stream.get();
+            return;
+        }
+        case ',': {
+            next_token.type = TokenType::comma;
             token_stream.get();
             return;
         }
@@ -108,7 +114,10 @@ void Tokenizer::ReadValue() {
             }
             next_token.type = TokenType::number;
             next_token.value = value.str();
-        } catch (std::exception &e) {
+        } catch (std::invalid_argument const &e) {
+            std::cerr << e.what() << std::endl;
+            std::abort();
+        } catch (std::out_of_range const &e) {
             std::cerr << e.what() << std::endl;
             std::abort();
         }
