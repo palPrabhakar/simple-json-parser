@@ -15,6 +15,7 @@ class Parser {
     Json ParseNumber();
     Json ParseBool();
     Json ParseNull();
+    Json ParsePair();
     Json ParseObject();
     Json ParseArray();
 
