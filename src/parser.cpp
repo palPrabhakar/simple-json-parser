@@ -96,9 +96,14 @@ Json Parser::ParseArray() {
         case TokenType::jnull: {
             auto _ = ParseNull();
         } break;
+        case TokenType::left_braces: {
+            auto _ = ParseObject();
+        } break;
+        case TokenType::left_bracket: {
+            auto _ = ParseArray();
+        } break;
         default: {
-            std::cerr << "Unexpected error parsing JSON Array"
-                      << std::endl;
+            std::cerr << "Unexpected error parsing JSON Array" << std::endl;
             abort();
         }
         }
@@ -111,8 +116,7 @@ Json Parser::ParseArray() {
         case TokenType::right_bracket:
             break;
         default: {
-            std::cerr << "Unexpected error parsing JSON Array"
-                      << std::endl;
+            std::cerr << "Unexpected error parsing JSON Array" << std::endl;
             abort();
         }
         }
