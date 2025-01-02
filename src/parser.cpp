@@ -6,7 +6,7 @@
 #include "tokenizer.hpp"
 
 Json Parser::Parse() {
-    Json json(value_type::json_null);
+    Json json;
     Token token = tokenizer.PeekToken();
     switch (token.type) {
     case TokenType::quoted_str:
@@ -41,40 +41,30 @@ Json Parser::Parse() {
 }
 
 Json Parser::ParseQuotedString() {
-    std::cout << "ParseQuotedString" << std::endl;
     Token token = tokenizer.GetToken();
     assert(token.type == TokenType::quoted_str && "Expected Quoted String\n");
-    std::cout << "\tvalue: " << token.value << std::endl;
-    return Json(value_type::json_string);
+    return Json{};
 }
 
 Json Parser::ParseNumber() {
-    std::cout << "ParseNumber" << std::endl;
     Token token = tokenizer.GetToken();
     assert(token.type == TokenType::number && "Expected number\n");
-    std::cout << "\tvalue: " << token.value << std::endl;
-    return Json(value_type::json_number);
+    return Json{};
 }
 
 Json Parser::ParseBool() {
-    std::cout << "ParseBool" << std::endl;
     Token token = tokenizer.GetToken();
     assert(token.type == TokenType::jbool && "Expected true|false\n");
-    std::cout << "\tvalue: " << token.value << std::endl;
-    return Json(value_type::json_bool);
+    return Json{};
 }
 
 Json Parser::ParseNull() {
-    std::cout << "ParseNull" << std::endl;
     Token token = tokenizer.GetToken();
     assert(token.type == TokenType::jnull && "Expected null\n");
-    std::cout << "\tvalue: " << token.value << std::endl;
-    return Json(value_type::json_null);
+    return Json{};
 }
 
 Json Parser::ParsePair() {
-    std::cout << "ParsePair" << std::endl;
-
     assert(tokenizer.PeekToken().type == TokenType::quoted_str &&
            "Error parsing JSON pair: invalid Key\n");
 
@@ -108,11 +98,10 @@ Json Parser::ParsePair() {
     }
     }
 
-    return Json(value_type::json_null);
+    return Json{};
 }
 
 Json Parser::ParseObject() {
-    std::cout << "ParseObject" << std::endl;
     assert(tokenizer.GetToken().type == TokenType::left_braces &&
            "Expected '{'\n");
     // This is required to parse empty objects!
@@ -134,12 +123,12 @@ Json Parser::ParseObject() {
     }
     auto _ = tokenizer.GetToken();
 
-    return Json(value_type::json_object);
+    return Json{};
 }
 
 Json Parser::ParseArray() {
-    std::cout << "ParseArray" << std::endl;
-    assert(tokenizer.GetToken().type == TokenType::left_bracket && "Expected '['\n");
+    assert(tokenizer.GetToken().type == TokenType::left_bracket &&
+           "Expected '['\n");
     // This is required to parse empty arrays!
     while (tokenizer.PeekToken().type != TokenType::right_bracket) {
         switch (tokenizer.PeekToken().type) {
@@ -182,5 +171,5 @@ Json Parser::ParseArray() {
     }
     auto _ = tokenizer.GetToken();
 
-    return Json(value_type::json_array);
+    return Json{};
 }

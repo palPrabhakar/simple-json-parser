@@ -6,8 +6,8 @@
 enum class TokenType {
     quoted_str,    // "*"
     number,        // 4.20
-    jbool,         //
-    jnull,         //
+    jbool,         // true|false
+    jnull,         // null
     left_braces,   // {
     right_braces,  // }
     left_bracket,  // [

@@ -12,7 +12,7 @@ int main(void) {
     // std::istringstream ss("1.24");
     // std::istringstream ss("\"lol\"");
 
-    std::cout<<"InputString: "<<ss.str()<<std::endl;
+    std::cout << "InputString: " << ss.str() << std::endl;
 
     // std::istringstream ss("[1]");
     Parser parser(std::move(ss));

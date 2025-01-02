@@ -1,33 +1,70 @@
 #pragma once
 
-// json value types
-enum class value_type {
-  json_string,
-  json_number,
-  json_object,
-  json_array,
-  json_bool,
-  json_null
-};
+#include <iostream>
+#include <memory>
+#include <string>
+#include <vector>
 
-template <typename T> struct json_type {
-  using value = T;
-};
+enum class JsonType { jstring, jnumber, jnull, jbool, jobject, jarray };
 
-using json_number = json_type<double>;
+class Base;
+
+struct Json {
+    JsonType type;
+    std::unique_ptr<Base *> value;
+};
 
 // base class for json
-class Json {
-public:
-  Json(value_type type) : type(type) {}
+class Base {
+  public:
+    virtual ~Base() = default;
+    void Print() { PrintImpl(); }
 
-  template <typename T> T::value get_value() {
-    using U = T::value;
-    return U{};
-  }
+  protected:
+    Base() = default;
 
-  value_type get_type() { return type; }
+  private:
+    virtual void PrintImpl() { __builtin_unreachable(); }
+};
 
-private:
-  value_type type;
+template <typename ValueType> class JsonValue : public Base {
+  public:
+    JsonValue(ValueType val) : value(val) {}
+
+  private:
+    void PrintImpl() override { std::cout << "JsonValue" << std::endl; }
+
+    ValueType value;
+};
+
+struct JNull {};
+
+using JsonNull = JsonValue<JNull>;
+using JsonBool = JsonValue<bool>;
+using JsonNumber = JsonValue<double>;
+using JsonString = JsonValue<std::string>;
+
+struct JsonPair {
+    std::string key;
+    Base value;
+};
+
+class JsonObject : public Base {
+  public:
+    JsonObject(std::vector<JsonPair> val) : value(val) {}
+
+  private:
+    void PrintImpl() override { std::cout << "JsonObject" << std::endl; }
+
+    std::vector<JsonPair> value;
+};
+
+class JsonArray : public Base {
+  public:
+    JsonArray(std::vector<Base> val) : value(std::move(val)) {}
+
+  private:
+    void PrintImpl() override { std::cout << "JsonArray" << std::endl; }
+
+    std::vector<Base> value;
 };
