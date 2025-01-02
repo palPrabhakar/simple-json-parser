@@ -2,8 +2,10 @@
 
 #include <sstream>
 #include <string>
+#include <variant>
 
 enum class TokenType {
+    start,
     quoted_str,    // "*"
     number,        // 4.20
     jbool,         // true|false
@@ -19,30 +21,29 @@ enum class TokenType {
 
 struct Token {
     TokenType type;
-    std::string value;
+    std::variant<std::string, double, bool> value;
 };
 
 class Tokenizer {
   public:
-    Tokenizer(std::istringstream stream) : token_stream(std::move(stream)) {
+    Tokenizer(std::istringstream stream)
+        : token_stream(std::move(stream)), token(TokenType::start, {}) {
         Advance();
     }
 
     Token GetToken() {
-        Token token = next_token;
+        Token rtoken = token;
         Advance();
-        return token;
+        return rtoken;
     }
 
-    Token PeekToken() const { return next_token; }
+    Token PeekToken() const { return token; }
 
   private:
     std::istringstream token_stream;
-    // Token cur_token;
-    Token next_token;
+    Token token;
 
     void Advance();
     void ReadValue();
     void ReadQuotedString();
-
 };
