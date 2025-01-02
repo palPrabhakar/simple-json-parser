@@ -11,7 +11,7 @@ class Base;
 
 struct Json {
     JsonType type;
-    std::unique_ptr<Base *> value;
+    std::unique_ptr<Base> value;
 };
 
 // base class for json
@@ -46,12 +46,12 @@ using JsonString = JsonValue<std::string>;
 
 struct JsonPair {
     std::string key;
-    Base value;
+    Json value;
 };
 
 class JsonObject : public Base {
   public:
-    JsonObject(std::vector<JsonPair> val) : value(val) {}
+    JsonObject(std::vector<JsonPair> val) : value(std::move(val)) {}
 
   private:
     void PrintImpl() override { std::cout << "JsonObject" << std::endl; }
@@ -61,10 +61,10 @@ class JsonObject : public Base {
 
 class JsonArray : public Base {
   public:
-    JsonArray(std::vector<Base> val) : value(std::move(val)) {}
+    JsonArray(std::vector<Json> val) : value(std::move(val)) {}
 
   private:
     void PrintImpl() override { std::cout << "JsonArray" << std::endl; }
 
-    std::vector<Base> value;
+    std::vector<Json> value;
 };
