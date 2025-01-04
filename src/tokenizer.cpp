@@ -51,6 +51,10 @@ void Tokenizer::Advance() {
             token_stream.get();
             return;
         }
+        case ' ': {
+            token_stream.get();
+            break;
+        }
         default: {
             ReadValue();
             return;
@@ -112,11 +116,13 @@ void Tokenizer::ReadValue() {
             }
             token.type = TokenType::number;
             token.value = number;
-        } catch (std::invalid_argument const &e) {
-            std::cerr << e.what() << std::endl;
+        } catch (const std::invalid_argument &e) {
+            std::cerr << "invalid argument: " << e.what() << ": " << value.str()
+                      << std::endl;
             std::abort();
-        } catch (std::out_of_range const &e) {
-            std::cerr << e.what() << std::endl;
+        } catch (const std::out_of_range &e) {
+            std::cerr << "out of range: " << e.what() << ": " << value.str()
+                      << std::endl;
             std::abort();
         }
     }

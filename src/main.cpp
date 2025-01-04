@@ -46,7 +46,34 @@ int main(void) {
     }
 
     {
+        std::istringstream ss(
+            "{\"key1\":1, \"key2\": \"lol\", \"key3\": null}");
+        std::cout << "InputString: " << ss.str() << std::endl;
+        Parser parser(std::move(ss));
+        auto json = parser.Parse();
+        json.dump();
+    }
+
+    {
         std::istringstream ss("[true, null, 1]");
+        std::cout << "InputString: " << ss.str() << std::endl;
+        Parser parser(std::move(ss));
+        auto json = parser.Parse();
+        json.dump();
+    }
+
+    {
+        std::istringstream ss(
+            "{\"key1\":1, \"key2\": \"lol\", \"key3\": null, \"key4\": "
+            "{\"key1\":1, \"key2\": \"lol\", \"key3\": null}}");
+        std::cout << "InputString: " << ss.str() << std::endl;
+        Parser parser(std::move(ss));
+        auto json = parser.Parse();
+        json.dump();
+    }
+
+    {
+        std::istringstream ss("[true, null, 1, [true, null, 1]]");
         std::cout << "InputString: " << ss.str() << std::endl;
         Parser parser(std::move(ss));
         auto json = parser.Parse();
