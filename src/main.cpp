@@ -49,8 +49,8 @@ int main(void) {
         Parser parser(std::move(ss));
         auto json = parser.Parse();
         auto j = json.get(0);
-        std::cout<<*j->get<bool>();
-        std::cout<<std::endl;
+        std::cout << j.value().get<bool>().value();
+        std::cout << std::endl;
     }
 
     // {

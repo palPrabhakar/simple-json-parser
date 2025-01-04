@@ -4,6 +4,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <vector>
 
@@ -18,10 +19,22 @@ class Base {
 
         void dump() const { value->Print(); }
 
-        std::optional<Json> get(size_t);      // json-array
-        std::optional<Json> get(std::string); // json-object
+        std::optional<Json> get(size_t idx) const { // json-array
+            return value->get(idx);
+        }
+        std::optional<Json> get(std::string key) const { // json-object
+            return value->get(key);
+        }
         template <typename RetType> std::optional<RetType> get() const {
-            return std::nullopt;
+            if constexpr (std::is_same_v<RetType, std::string>) {
+                return value->getString();
+            } else if constexpr (std::is_same_v<RetType, bool>) {
+                return value->getBool();
+            } else if constexpr (std::is_same_v<RetType, double>) {
+                return value->getNumber();
+            } else {
+                return std::nullopt;
+            }
         }
     };
 
@@ -33,6 +46,13 @@ class Base {
 
   private:
     virtual void PrintImpl() { __builtin_unreachable(); }
+    virtual std::optional<Json> get(size_t) { return std::nullopt; }
+    virtual std::optional<Json> get(std::string) { return std::nullopt; }
+    virtual std::optional<std::string> getString() { return std::nullopt; }
+    virtual std::optional<double> getNumber() { return std::nullopt; }
+    virtual std::optional<bool> getBool() { return std::nullopt; }
+
+    void foo();
 };
 
 template <typename ValueType> class JsonValue : public Base {
@@ -43,6 +63,28 @@ template <typename ValueType> class JsonValue : public Base {
 
   private:
     void PrintImpl() override { std::cout << value; }
+
+    std::optional<std::string> getString() override {
+        if constexpr (std::is_same_v<ValueType, std::string>) {
+            return value;
+        } else {
+            return std::nullopt;
+        }
+    }
+    std::optional<double> getNumber() override {
+        if constexpr (std::is_same_v<ValueType, double>) {
+            return value;
+        } else {
+            return std::nullopt;
+        }
+    }
+    std::optional<bool> getBool() override {
+        if constexpr (std::is_same_v<ValueType, bool>) {
+            return value;
+        } else {
+            return std::nullopt;
+        }
+    }
 };
 
 struct JNull {};
@@ -81,6 +123,10 @@ class JsonObject : public Base {
         }
         std::cout << "}";
     }
+
+    std::optional<Json> get(std::string key) override {
+        return value.contains(key) ? std::optional(value[key]) : std::nullopt;
+    }
 };
 
 class JsonArray : public Base {
@@ -103,61 +149,43 @@ class JsonArray : public Base {
         }
         std::cout << "]";
     }
+
+    std::optional<Json> get(size_t idx) override {
+        return idx < value.size() ? std::optional(value[idx]) : std::nullopt;
+    }
 };
 
 using Json = Base::Json;
 
-__attribute__((__always_inline__)) inline std::optional<Json>
-Json::get(size_t idx) {
-    if (type == JsonType::jarray) {
-        auto *ptr = static_cast<JsonArray *>(value.get());
-        return idx < ptr->value.size() ? std::optional(ptr->value[idx])
-                                       : std::nullopt;
-    } else {
-        return std::nullopt;
-    }
-};
+// template <>
+// __attribute__((__always_inline__)) inline std::optional<std::string>
+// Json::get<std::string>() const {
+//     if (type == JsonType::jstring) {
+//         auto *ptr = static_cast<JsonString *>(value.get());
+//         return ptr->value;
+//     } else {
+//         return std::nullopt;
+//     }
+// }
 
-__attribute__((__always_inline__)) inline std::optional<Json>
-Json::get(std::string key) {
-    if (type == JsonType::jobject) {
-        auto *ptr = static_cast<JsonObject *>(value.get());
-        return ptr->value.contains(key) ? std::optional(ptr->value[key])
-                                        : std::nullopt;
-    } else {
-        return std::nullopt;
-    }
-}
+// template <>
+// __attribute__((__always_inline__)) inline std::optional<double>
+// Json::get<double>() const {
+//     if (type == JsonType::jnumber) {
+//         auto *ptr = static_cast<JsonNumber *>(value.get());
+//         return ptr->value;
+//     } else {
+//         return std::nullopt;
+//     }
+// }
 
-template <>
-__attribute__((__always_inline__)) inline std::optional<std::string>
-Json::get<std::string>() const {
-    if (type == JsonType::jstring) {
-        auto *ptr = static_cast<JsonString *>(value.get());
-        return ptr->value;
-    } else {
-        return std::nullopt;
-    }
-}
-
-template <>
-__attribute__((__always_inline__)) inline std::optional<double>
-Json::get<double>() const {
-    if (type == JsonType::jnumber) {
-        auto *ptr = static_cast<JsonNumber *>(value.get());
-        return ptr->value;
-    } else {
-        return std::nullopt;
-    }
-}
-
-template <>
-__attribute__((__always_inline__)) inline std::optional<bool>
-Json::get<bool>() const {
-    if (type == JsonType::jbool) {
-        auto *ptr = static_cast<JsonBool *>(value.get());
-        return ptr->value;
-    } else {
-        return std::nullopt;
-    }
-}
+// template <>
+// __attribute__((__always_inline__)) inline std::optional<bool>
+// Json::get<bool>() const {
+//     if (type == JsonType::jbool) {
+//         auto *ptr = static_cast<JsonBool *>(value.get());
+//         return ptr->value;
+//     } else {
+//         return std::nullopt;
+//     }
+// }
