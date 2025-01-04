@@ -9,6 +9,7 @@
 #include <vector>
 
 enum class JsonType { jstring, jnumber, jnull, jbool, jobject, jarray };
+struct JNull {};
 
 // base class for json
 class Base {
@@ -41,27 +42,21 @@ class Base {
     virtual ~Base() = default;
     void Print() { PrintImpl(); }
 
-  protected:
-    Base() = default;
-
   private:
-    virtual void PrintImpl() { __builtin_unreachable(); }
+    virtual void PrintImpl() = 0;
     virtual std::optional<Json> get(size_t) { return std::nullopt; }
     virtual std::optional<Json> get(std::string) { return std::nullopt; }
     virtual std::optional<std::string> getString() { return std::nullopt; }
     virtual std::optional<double> getNumber() { return std::nullopt; }
     virtual std::optional<bool> getBool() { return std::nullopt; }
-
-    void foo();
 };
 
 template <typename ValueType> class JsonValue : public Base {
   public:
     JsonValue(ValueType val) : value(val) {}
 
-    ValueType value;
-
   private:
+    ValueType value;
     void PrintImpl() override { std::cout << value; }
 
     std::optional<std::string> getString() override {
@@ -87,27 +82,19 @@ template <typename ValueType> class JsonValue : public Base {
     }
 };
 
-struct JNull {};
-
-using JsonNull = JsonValue<JNull>;
 template <> inline void JsonValue<JNull>::PrintImpl() { std::cout << "null"; }
 
-using JsonBool = JsonValue<bool>;
 template <> inline void JsonValue<bool>::PrintImpl() {
     std::cout << (value ? "true" : "false");
 }
-
-using JsonNumber = JsonValue<double>;
-using JsonString = JsonValue<std::string>;
 
 class JsonObject : public Base {
   public:
     JsonObject(std::unordered_map<std::string, Json> val)
         : value(std::move(val)) {}
 
-    std::unordered_map<std::string, Json> value;
-
   private:
+    std::unordered_map<std::string, Json> value;
     void PrintImpl() override {
         std::cout << "{";
         if (!value.empty()) {
@@ -133,9 +120,8 @@ class JsonArray : public Base {
   public:
     JsonArray(std::vector<Json> val) : value(std::move(val)) {}
 
-    std::vector<Json> value;
-
   private:
+    std::vector<Json> value;
     void PrintImpl() override {
         std::cout << "[";
         if (!value.empty()) {
@@ -156,36 +142,7 @@ class JsonArray : public Base {
 };
 
 using Json = Base::Json;
-
-// template <>
-// __attribute__((__always_inline__)) inline std::optional<std::string>
-// Json::get<std::string>() const {
-//     if (type == JsonType::jstring) {
-//         auto *ptr = static_cast<JsonString *>(value.get());
-//         return ptr->value;
-//     } else {
-//         return std::nullopt;
-//     }
-// }
-
-// template <>
-// __attribute__((__always_inline__)) inline std::optional<double>
-// Json::get<double>() const {
-//     if (type == JsonType::jnumber) {
-//         auto *ptr = static_cast<JsonNumber *>(value.get());
-//         return ptr->value;
-//     } else {
-//         return std::nullopt;
-//     }
-// }
-
-// template <>
-// __attribute__((__always_inline__)) inline std::optional<bool>
-// Json::get<bool>() const {
-//     if (type == JsonType::jbool) {
-//         auto *ptr = static_cast<JsonBool *>(value.get());
-//         return ptr->value;
-//     } else {
-//         return std::nullopt;
-//     }
-// }
+using JsonNumber = JsonValue<double>;
+using JsonString = JsonValue<std::string>;
+using JsonBool = JsonValue<bool>;
+using JsonNull = JsonValue<JNull>;
