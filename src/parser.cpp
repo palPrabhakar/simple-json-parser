@@ -119,7 +119,7 @@ Json Parser::ParseObject() {
 
         switch (tokenizer.PeekToken().type) {
         case TokenType::comma: {
-            auto _ = tokenizer.GetToken();
+            tokenizer.GetToken();
             assert(tokenizer.PeekToken().type != TokenType::right_braces &&
                    "Unexpected error parsing JSON object");
         } break;
@@ -131,7 +131,7 @@ Json Parser::ParseObject() {
         }
         }
     }
-    auto _ = tokenizer.GetToken();
+    tokenizer.GetToken();
 
     return Json{.type = JsonType::jobject,
                 .value = std::make_shared<JsonObject>(std::move(pairs))};
@@ -169,7 +169,7 @@ Json Parser::ParseArray() {
         }
         switch (tokenizer.PeekToken().type) {
         case TokenType::comma: {
-            auto _ = tokenizer.GetToken();
+            tokenizer.GetToken();
             assert(tokenizer.PeekToken().type != TokenType::right_bracket &&
                    "Unexpected error parsing JSON Array");
         } break;
@@ -181,7 +181,7 @@ Json Parser::ParseArray() {
         }
         }
     }
-    auto _ = tokenizer.GetToken();
+    tokenizer.GetToken();
 
     return Json{.type = JsonType::jarray,
                 .value = std::make_shared<JsonArray>(std::move(arr))};

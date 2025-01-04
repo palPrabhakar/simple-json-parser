@@ -1,11 +1,9 @@
 #pragma once
 
-#include <cassert>
 #include <iostream>
 #include <memory>
 #include <optional>
 #include <string>
-#include <type_traits>
 #include <unordered_map>
 #include <vector>
 
@@ -22,14 +20,13 @@ class Base {
 
         std::optional<Json> get(size_t);      // json-array
         std::optional<Json> get(std::string); // json-object
-        template <typename RetType>
-        std::optional<RetType> get() const; // json-value
+        template <typename RetType> std::optional<RetType> get() const {
+            return std::nullopt;
+        }
     };
 
     virtual ~Base() = default;
     void Print() { PrintImpl(); }
-
-    template <int> std::optional<Json> get();
 
   protected:
     Base() = default;
@@ -112,46 +109,55 @@ using Json = Base::Json;
 
 __attribute__((__always_inline__)) inline std::optional<Json>
 Json::get(size_t idx) {
-    assert(type == JsonType::jarray);
-    auto *ptr = static_cast<JsonArray *>(value.get());
-    return idx < ptr->value.size() ? std::optional(ptr->value[idx])
-                                   : std::nullopt;
+    if (type == JsonType::jarray) {
+        auto *ptr = static_cast<JsonArray *>(value.get());
+        return idx < ptr->value.size() ? std::optional(ptr->value[idx])
+                                       : std::nullopt;
+    } else {
+        return std::nullopt;
+    }
 };
 
 __attribute__((__always_inline__)) inline std::optional<Json>
 Json::get(std::string key) {
-    assert(type == JsonType::jobject);
-    auto *ptr = static_cast<JsonObject *>(value.get());
-    return ptr->value.contains(key) ? std::optional(ptr->value[key])
-                                    : std::nullopt;
+    if (type == JsonType::jobject) {
+        auto *ptr = static_cast<JsonObject *>(value.get());
+        return ptr->value.contains(key) ? std::optional(ptr->value[key])
+                                        : std::nullopt;
+    } else {
+        return std::nullopt;
+    }
 }
 
-template <typename RetType> std::optional<RetType> Json::get() const {
-    // Handle null case
-    if constexpr (std::is_same_v<std::string, RetType>) {
-        if (type == JsonType::jstring) {
-            auto *ptr = static_cast<JsonString *>(value.get());
-            return ptr->value;
-        } else {
-            return std::nullopt;
-        }
-    } else if (std::is_same_v<double, RetType>) {
-        if (type == JsonType::jnumber) {
-            auto *ptr = static_cast<JsonNumber *>(value.get());
-            return ptr->value;
-        } else {
-            return std::nullopt;
-        }
-    } else if (std::is_same_v<bool, RetType>) {
-        assert(type == JsonType::jbool || type == JsonType::jnull);
-        if (type == JsonType::jbool) {
-            auto *ptr = static_cast<JsonBool *>(value.get());
-            return ptr->value;
-        } else {
-            return std::nullopt;
-        }
+template <>
+__attribute__((__always_inline__)) inline std::optional<std::string>
+Json::get<std::string>() const {
+    if (type == JsonType::jstring) {
+        auto *ptr = static_cast<JsonString *>(value.get());
+        return ptr->value;
     } else {
-        std::cerr << "Error Json::get() - invalid type" << std::endl;
-        abort();
+        return std::nullopt;
+    }
+}
+
+template <>
+__attribute__((__always_inline__)) inline std::optional<double>
+Json::get<double>() const {
+    if (type == JsonType::jnumber) {
+        auto *ptr = static_cast<JsonNumber *>(value.get());
+        return ptr->value;
+    } else {
+        return std::nullopt;
+    }
+}
+
+template <>
+__attribute__((__always_inline__)) inline std::optional<bool>
+Json::get<bool>() const {
+    if (type == JsonType::jbool) {
+        auto *ptr = static_cast<JsonBool *>(value.get());
+        return ptr->value;
+    } else {
+        return std::nullopt;
     }
 }
