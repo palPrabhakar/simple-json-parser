@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_compile_options(-Wall -Wextra -Wpedantic -Wconversion)
+add_compile_options(-Wall -Wextra -Wpedantic -Wconversion -Wswitch)
 
 include_directories(include)
 
