@@ -32,7 +32,7 @@ template <typename ValueType> class JsonValue : public Base {
     JsonValue(ValueType val) : value(val) {}
 
   private:
-    void PrintImpl() override { std::cout << value << std::endl; }
+    void PrintImpl() override { std::cout << value; }
 
     ValueType value;
 };
@@ -41,12 +41,12 @@ struct JNull {};
 
 using JsonNull = JsonValue<JNull>;
 template <> inline void JsonValue<JNull>::PrintImpl() {
-    std::cout << "null" << std::endl;
+    std::cout << "null";
 }
 
 using JsonBool = JsonValue<bool>;
 template <> inline void JsonValue<bool>::PrintImpl() {
-    std::cout << (value ? "true" : "false") << std::endl;
+    std::cout << (value ? "true" : "false");
 }
 
 using JsonNumber = JsonValue<double>;
@@ -63,8 +63,7 @@ class JsonObject : public Base {
 
   private:
     void PrintImpl() override {
-        std::cout << "{\n  ";
-
+        std::cout << "{";
         if (!value.empty()) {
             auto &[key, val] = value[0];
             std::cout << key << ": ";
@@ -76,7 +75,7 @@ class JsonObject : public Base {
                 val.value->Print();
             }
         }
-        std::cout << "}" << std::endl;
+        std::cout << "}";
     }
 
     std::vector<JsonPair> value;
@@ -88,7 +87,7 @@ class JsonArray : public Base {
 
   private:
     void PrintImpl() override {
-        std::cout << "[\n  ";
+        std::cout << "[";
         if (!value.empty()) {
             auto &val = value[0];
             val.value->Print();
@@ -98,7 +97,7 @@ class JsonArray : public Base {
                 val.value->Print();
             }
         }
-        std::cout << "]" << std::endl;
+        std::cout << "]";
     }
 
     std::vector<Json> value;
