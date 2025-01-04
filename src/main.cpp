@@ -48,8 +48,8 @@ int main(void) {
         // TEST(ss);
         Parser parser(std::move(ss));
         auto json = parser.Parse();
-        auto &j = json.get(0);
-        std::cout<<*j.get<bool>();
+        auto j = json.get(0);
+        std::cout<<*j->get<bool>();
         std::cout<<std::endl;
     }
 

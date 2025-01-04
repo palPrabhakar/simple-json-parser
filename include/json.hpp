@@ -16,13 +16,14 @@ class Base {
   public:
     struct Json {
         JsonType type;
-        std::unique_ptr<Base> value;
+        std::shared_ptr<Base> value;
 
         void dump() const { value->Print(); }
 
-        const Json &get(size_t);                                  // json-array
-        const Json &get(std::string);                             // json-object
-        template <typename RetType> std::optional<RetType> get() const; // json-value
+        std::optional<Json> get(size_t);      // json-array
+        std::optional<Json> get(std::string); // json-object
+        template <typename RetType>
+        std::optional<RetType> get() const; // json-value
     };
 
     virtual ~Base() = default;
@@ -109,16 +110,20 @@ class JsonArray : public Base {
 
 using Json = Base::Json;
 
-inline const Json &Json::get(size_t idx) {
+__attribute__((__always_inline__)) inline std::optional<Json>
+Json::get(size_t idx) {
     assert(type == JsonType::jarray);
     auto *ptr = static_cast<JsonArray *>(value.get());
-    return ptr->value[idx];
+    return idx < ptr->value.size() ? std::optional(ptr->value[idx])
+                                   : std::nullopt;
 };
 
-__attribute__((__always_inline__)) inline const Json &Json::get(std::string key) {
+__attribute__((__always_inline__)) inline std::optional<Json>
+Json::get(std::string key) {
     assert(type == JsonType::jobject);
     auto *ptr = static_cast<JsonObject *>(value.get());
-    return ptr->value[key];
+    return ptr->value.contains(key) ? std::optional(ptr->value[key])
+                                    : std::nullopt;
 }
 
 template <typename RetType> std::optional<RetType> Json::get() const {

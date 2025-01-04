@@ -45,7 +45,7 @@ Json Parser::ParseQuotedString() {
     Token token = tokenizer.GetToken();
     assert(token.type == TokenType::quoted_str && "Expected Quoted String\n");
     return Json{.type = JsonType::jstring,
-                .value = std::make_unique<JsonString>(
+                .value = std::make_shared<JsonString>(
                     std::get<std::string>(token.value))};
 }
 
@@ -54,7 +54,7 @@ Json Parser::ParseNumber() {
     assert(token.type == TokenType::number && "Expected number\n");
     return Json{
         .type = JsonType::jnumber,
-        .value = std::make_unique<JsonNumber>(std::get<double>(token.value))};
+        .value = std::make_shared<JsonNumber>(std::get<double>(token.value))};
 }
 
 Json Parser::ParseBool() {
@@ -62,14 +62,14 @@ Json Parser::ParseBool() {
     assert(token.type == TokenType::jbool && "Expected true|false\n");
     return Json{.type = JsonType::jbool,
                 .value =
-                    std::make_unique<JsonBool>(std::get<bool>(token.value))};
+                    std::make_shared<JsonBool>(std::get<bool>(token.value))};
 }
 
 Json Parser::ParseNull() {
     Token token = tokenizer.GetToken();
     assert(token.type == TokenType::jnull && "Expected null\n");
     return Json{.type = JsonType::jnull,
-                .value = std::make_unique<JsonNull>(JNull{})};
+                .value = std::make_shared<JsonNull>(JNull{})};
 }
 
 std::pair<std::string, Json> Parser::ParsePair() {
@@ -134,7 +134,7 @@ Json Parser::ParseObject() {
     auto _ = tokenizer.GetToken();
 
     return Json{.type = JsonType::jobject,
-                .value = std::make_unique<JsonObject>(std::move(pairs))};
+                .value = std::make_shared<JsonObject>(std::move(pairs))};
 }
 
 Json Parser::ParseArray() {
@@ -184,5 +184,5 @@ Json Parser::ParseArray() {
     auto _ = tokenizer.GetToken();
 
     return Json{.type = JsonType::jarray,
-                .value = std::make_unique<JsonArray>(std::move(arr))};
+                .value = std::make_shared<JsonArray>(std::move(arr))};
 }
