@@ -2,6 +2,7 @@
 
 #include "json.hpp"
 #include "tokenizer.hpp"
+#include <utility>
 
 class Parser {
   public:
@@ -11,11 +12,11 @@ class Parser {
     Json Parse();
 
   private:
+    std::pair<std::string, Json> ParsePair();
     Json ParseQuotedString();
     Json ParseNumber();
     Json ParseBool();
     Json ParseNull();
-    JsonPair ParsePair();
     Json ParseObject();
     Json ParseArray();
 

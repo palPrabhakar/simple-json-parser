@@ -72,54 +72,51 @@ Json Parser::ParseNull() {
                 .value = std::make_unique<JsonNull>(JNull{})};
 }
 
-JsonPair Parser::ParsePair() {
+std::pair<std::string, Json> Parser::ParsePair() {
     assert(tokenizer.PeekToken().type == TokenType::quoted_str &&
            "Error parsing JSON pair: invalid Key\n");
 
-    JsonPair pair;
-
     Token token = tokenizer.GetToken();
 
-    pair.key = std::get<std::string>(token.value);
+    auto key = std::get<std::string>(token.value);
 
     assert(tokenizer.GetToken().type == TokenType::colon &&
            "Error parsing JSON pair: expected colon\n");
 
     switch (tokenizer.PeekToken().type) {
     case TokenType::quoted_str:
-        pair.value = ParseQuotedString();
-        break;
+        return {key, ParseQuotedString()};
     case TokenType::number:
-        pair.value = ParseNumber();
-        break;
+        return {key, ParseNumber()};
     case TokenType::jbool:
-        pair.value = ParseBool();
-        break;
+        return {key, ParseBool()};
     case TokenType::jnull:
-        pair.value = ParseNull();
-        break;
+        return {key, ParseNull()};
     case TokenType::left_braces:
-        pair.value = ParseObject();
-        break;
+        return {key, ParseObject()};
     case TokenType::left_bracket:
-        pair.value = ParseArray();
-        break;
+        return {key, ParseArray()};
     default: {
         std::cerr << "Unexpected error parsing JSON object" << std::endl;
         abort();
     }
     }
-    return pair;
 }
 
 Json Parser::ParseObject() {
     assert(tokenizer.GetToken().type == TokenType::left_braces &&
            "Expected '{'\n");
 
-    std::vector<JsonPair> pairs;
+    std::unordered_map<std::string, Json> pairs;
     // This is required to parse empty objects!
     while (tokenizer.PeekToken().type != TokenType::right_braces) {
-        pairs.emplace_back(ParsePair());
+        auto [key, value] = ParsePair();
+        if (pairs.contains(key)) {
+            std::cerr << "Error duplicate key: " << key << std::endl;
+            abort();
+        }
+        pairs.emplace(key, std::move(value));
+
         switch (tokenizer.PeekToken().type) {
         case TokenType::comma: {
             auto _ = tokenizer.GetToken();

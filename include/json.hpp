@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 enum class JsonType { jstring, jnumber, jnull, jbool, jobject, jarray };
@@ -40,9 +41,7 @@ template <typename ValueType> class JsonValue : public Base {
 struct JNull {};
 
 using JsonNull = JsonValue<JNull>;
-template <> inline void JsonValue<JNull>::PrintImpl() {
-    std::cout << "null";
-}
+template <> inline void JsonValue<JNull>::PrintImpl() { std::cout << "null"; }
 
 using JsonBool = JsonValue<bool>;
 template <> inline void JsonValue<bool>::PrintImpl() {
@@ -52,25 +51,21 @@ template <> inline void JsonValue<bool>::PrintImpl() {
 using JsonNumber = JsonValue<double>;
 using JsonString = JsonValue<std::string>;
 
-struct JsonPair {
-    std::string key;
-    Json value;
-};
-
 class JsonObject : public Base {
   public:
-    JsonObject(std::vector<JsonPair> val) : value(std::move(val)) {}
+    JsonObject(std::unordered_map<std::string, Json> val)
+        : value(std::move(val)) {}
 
   private:
     void PrintImpl() override {
         std::cout << "{";
         if (!value.empty()) {
-            auto &[key, val] = value[0];
+            auto &[key, val] = *value.begin();
             std::cout << key << ": ";
             val.value->Print();
-            for (size_t i = 1; i < value.size(); ++i) {
+            for (auto i = ++value.begin(); i != value.end(); ++i) {
                 std::cout << ", ";
-                auto &[key, val] = value[i];
+                auto &[key, val] = *i;
                 std::cout << key << ": ";
                 val.value->Print();
             }
@@ -78,7 +73,7 @@ class JsonObject : public Base {
         std::cout << "}";
     }
 
-    std::vector<JsonPair> value;
+    std::unordered_map<std::string, Json> value;
 };
 
 class JsonArray : public Base {
