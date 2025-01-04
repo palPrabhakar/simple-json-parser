@@ -10,6 +10,7 @@ int main(void) {
         std::cout << "InputString: " << ss.str() << std::endl;
         Parser parser(std::move(ss));
         auto json = parser.Parse();
+        json.dump();
     }
 
     {
@@ -17,6 +18,7 @@ int main(void) {
         std::cout << "InputString: " << ss.str() << std::endl;
         Parser parser(std::move(ss));
         auto json = parser.Parse();
+        json.dump();
     }
 
     {
@@ -24,6 +26,7 @@ int main(void) {
         std::cout << "InputString: " << ss.str() << std::endl;
         Parser parser(std::move(ss));
         auto json = parser.Parse();
+        json.dump();
     }
 
     {
@@ -31,6 +34,7 @@ int main(void) {
         std::cout << "InputString: " << ss.str() << std::endl;
         Parser parser(std::move(ss));
         auto json = parser.Parse();
+        json.dump();
     }
 
     {
@@ -38,6 +42,7 @@ int main(void) {
         std::cout << "InputString: " << ss.str() << std::endl;
         Parser parser(std::move(ss));
         auto json = parser.Parse();
+        json.dump();
     }
 
     {
@@ -45,6 +50,7 @@ int main(void) {
         std::cout << "InputString: " << ss.str() << std::endl;
         Parser parser(std::move(ss));
         auto json = parser.Parse();
+        json.dump();
     }
 
     return 0;
