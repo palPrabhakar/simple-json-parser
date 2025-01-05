@@ -51,4 +51,5 @@ class Tokenizer {
     void Advance();
     void ReadValue();
     void ReadQuotedString();
+    void SkipComments(bool);
 };

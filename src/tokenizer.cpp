@@ -55,6 +55,16 @@ void Tokenizer::Advance() {
             token_stream.get();
             break;
         }
+        case '/': {
+            token_stream.get();
+            c = static_cast<char>(token_stream.peek());
+            if (c == '/' || c == '*') {
+                SkipComments(c == '*');
+            } else {
+                THROW_ERROR("Unexpected error parsing json string");
+            }
+            break;
+        }
         default: {
             ReadValue();
             return;
@@ -119,4 +129,28 @@ void Tokenizer::ReadValue() {
             THROW_ERROR("Error parsing json number - number out of range");
         }
     }
+}
+
+void Tokenizer::SkipComments(bool multi) {
+    token_stream.get();
+    // comment starts
+    if (multi) {
+        while (token_stream.peek() != std::istringstream::traits_type::eof()) {
+            char c = static_cast<char>(token_stream.get());
+            if (c == '*') {
+                if (token_stream.peek() == '/') {
+                    token_stream.get();
+                    return;
+                }
+            }
+        }
+    } else {
+        while (token_stream.peek() != std::istringstream::traits_type::eof()) {
+            char c = static_cast<char>(token_stream.get());
+            if (c == '\n') {
+                return;
+            }
+        }
+    }
+    THROW_ERROR("Unexpected error parsing json string");
 }
