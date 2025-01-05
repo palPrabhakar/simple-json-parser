@@ -1,5 +1,4 @@
 #include <cstdlib>
-#include <iostream>
 #include <sstream>
 #include <stdexcept>
 
@@ -51,6 +50,7 @@ void Tokenizer::Advance() {
             token_stream.get();
             return;
         }
+        case '\n':
         case ' ': {
             token_stream.get();
             break;
@@ -73,8 +73,7 @@ void Tokenizer::ReadQuotedString() {
             value << static_cast<char>(token_stream.get());
             c = static_cast<char>(token_stream.peek());
             if (c != '"' && c != '\\') {
-                std::cerr << "Invalid char after '\\' " << c << std::endl;
-                std::abort();
+                THROW_ERROR("Invalid char after escape sequence");
             }
         }
         value << static_cast<char>(token_stream.get());
@@ -115,9 +114,9 @@ void Tokenizer::ReadValue() {
             token.type = TokenType::number;
             token.value = number;
         } catch (const std::invalid_argument &e) {
-            THROW_ERROR("Error paring json number - invalid argument");
+            THROW_ERROR("Error parsing json number - invalid argument");
         } catch (const std::out_of_range &e) {
-            THROW_ERROR("Error paring json number - number out of range");
+            THROW_ERROR("Error parsing json number - number out of range");
         }
     }
 }

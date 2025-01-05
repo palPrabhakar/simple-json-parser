@@ -1,5 +1,4 @@
 #include <cassert>
-#include <iostream>
 #include <memory>
 
 #include "json.hpp"
@@ -113,7 +112,6 @@ Json Parser::ParseObject() {
     if (tokenizer.GetToken().type != TokenType::left_braces) {
         THROW_ERROR("Error parsing json object - expected '{'");
     }
-
     std::unordered_map<std::string, Json> pairs;
     // This is required to parse empty objects!
     while (tokenizer.PeekToken().type != TokenType::right_braces) {
@@ -137,8 +135,9 @@ Json Parser::ParseObject() {
         }
         }
     }
-    tokenizer.GetToken();
-
+    if(tokenizer.GetToken().type != TokenType::right_braces) {
+        THROW_ERROR("Error parssing JSON object - expected '}'");
+    }
     return Json{.type = JsonType::jobject,
                 .value = std::make_shared<JsonObject>(std::move(pairs))};
 }
@@ -187,8 +186,9 @@ Json Parser::ParseArray() {
         }
         }
     }
-    tokenizer.GetToken();
-
+    if(tokenizer.GetToken().type != TokenType::right_bracket) {
+        THROW_ERROR("Error parssing JSON object - expected ']'");
+    }
     return Json{.type = JsonType::jarray,
                 .value = std::make_shared<JsonArray>(std::move(arr))};
 }
