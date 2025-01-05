@@ -18,21 +18,21 @@ class Base {
         JsonType type;
         std::shared_ptr<Base> value;
 
-        void dump() const { value->Print(); }
+        void Dump() const { value->Print(); }
 
-        std::optional<Json> get(size_t idx) const { // json-array
-            return value->get(idx);
+        std::optional<Json> Get(size_t idx) const { // json-array
+            return value->Get(idx);
         }
-        std::optional<Json> get(std::string key) const { // json-object
-            return value->get(key);
+        std::optional<Json> Get(std::string key) const { // json-object
+            return value->Get(key);
         }
-        template <typename RetType> std::optional<RetType> get() const {
+        template <typename RetType> std::optional<RetType> Get() const {
             if constexpr (std::is_same_v<RetType, std::string>) {
-                return value->getString();
+                return value->GetString();
             } else if constexpr (std::is_same_v<RetType, bool>) {
-                return value->getBool();
+                return value->GetBool();
             } else if constexpr (std::is_same_v<RetType, double>) {
-                return value->getNumber();
+                return value->GetNumber();
             } else {
                 return std::nullopt;
             }
@@ -44,11 +44,11 @@ class Base {
 
   private:
     virtual void PrintImpl() = 0;
-    virtual std::optional<Json> get(size_t) { return std::nullopt; }
-    virtual std::optional<Json> get(std::string) { return std::nullopt; }
-    virtual std::optional<std::string> getString() { return std::nullopt; }
-    virtual std::optional<double> getNumber() { return std::nullopt; }
-    virtual std::optional<bool> getBool() { return std::nullopt; }
+    virtual std::optional<Json> Get(size_t) { return std::nullopt; }
+    virtual std::optional<Json> Get(std::string) { return std::nullopt; }
+    virtual std::optional<std::string> GetString() { return std::nullopt; }
+    virtual std::optional<double> GetNumber() { return std::nullopt; }
+    virtual std::optional<bool> GetBool() { return std::nullopt; }
 };
 
 template <typename ValueType> class JsonValue : public Base {
@@ -59,21 +59,21 @@ template <typename ValueType> class JsonValue : public Base {
     ValueType value;
     void PrintImpl() override { std::cout << value; }
 
-    std::optional<std::string> getString() override {
+    std::optional<std::string> GetString() override {
         if constexpr (std::is_same_v<ValueType, std::string>) {
             return value;
         } else {
             return std::nullopt;
         }
     }
-    std::optional<double> getNumber() override {
+    std::optional<double> GetNumber() override {
         if constexpr (std::is_same_v<ValueType, double>) {
             return value;
         } else {
             return std::nullopt;
         }
     }
-    std::optional<bool> getBool() override {
+    std::optional<bool> GetBool() override {
         if constexpr (std::is_same_v<ValueType, bool>) {
             return value;
         } else {
@@ -111,7 +111,7 @@ class JsonObject : public Base {
         std::cout << "}";
     }
 
-    std::optional<Json> get(std::string key) override {
+    std::optional<Json> Get(std::string key) override {
         return value.contains(key) ? std::optional(value[key]) : std::nullopt;
     }
 };
@@ -136,7 +136,7 @@ class JsonArray : public Base {
         std::cout << "]";
     }
 
-    std::optional<Json> get(size_t idx) override {
+    std::optional<Json> Get(size_t idx) override {
         return idx < value.size() ? std::optional(value[idx]) : std::nullopt;
     }
 };

@@ -6,7 +6,7 @@
     std::cout << "InputString: " << x.str() << std::endl;                      \
     Parser parser(std::move(x));                                               \
     auto json = parser.Parse();                                                \
-    json.dump();                                                               \
+    json.Dump();                                                               \
     std::cout << std::endl;
 
 int main(void) {
@@ -48,8 +48,8 @@ int main(void) {
         // TEST(ss);
         Parser parser(std::move(ss));
         auto json = parser.Parse();
-        auto j = json.get(0);
-        std::cout << j.value().get<bool>().value();
+        auto j = json.Get(0);
+        std::cout << j.value().Get<bool>().value();
         std::cout << std::endl;
     }
 
