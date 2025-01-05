@@ -47,31 +47,31 @@ TEST(JsonParserTest, MixedTypes) {
 // }
 
 // Invalid Json
-// TEST(JsonParserTest, MissingBrace) {
-//     std::istringstream json(R"({"key": "value")"); // Missing closing brace
-//     EXPECT_THROW(parseJSON(std::move(json)), std::runtime_error);
-// }
+TEST(JsonParserTest, MissingBrace) {
+    std::istringstream json(R"({"key": "value")"); // Missing closing brace
+    EXPECT_THROW(parseJSON(std::move(json)), std::runtime_error);
+}
 
-// TEST(JsonParserTest, InvalidKeyFormat) {
-//     std::istringstream json(R"({key: "value"})"); // Key not in quotes
-//     EXPECT_THROW(parseJSON(std::move(json)), std::runtime_error);
-// }
+TEST(JsonParserTest, InvalidKeyFormat) {
+    std::istringstream json(R"({key: "value"})"); // Key not in quotes
+    EXPECT_THROW(parseJSON(std::move(json)), std::runtime_error);
+}
 
-// TEST(JsonParserTest, UnexpectedToken) {
-//     std::istringstream json(R"({"key": "value", "extra"})"); // Invalid
-//     syntax EXPECT_THROW(parseJSON(std::move(json)), std::runtime_error);
-// }
+TEST(JsonParserTest, UnexpectedToken) {
+    std::istringstream json(R"({"key": "value", "extra"})"); // Invalid syntax
+    EXPECT_THROW(parseJSON(std::move(json)), std::runtime_error);
+}
 
-// TEST(JsonParserTest, InvalidNumber) {
-//     std::istringstream json(R"({"number": 1e9999})"); // Out-of-range number
-//     EXPECT_THROW(parseJSON(std::move(json)), std::runtime_error);
-// }
+TEST(JsonParserTest, InvalidNumber) {
+    std::istringstream json(R"({"number": 1e9999})"); // Out-of-range number
+    EXPECT_THROW(parseJSON(std::move(json)), std::runtime_error);
+}
 
-// TEST(JsonParserTest, UnterminatedString) {
-//     std::istringstream json(
-//         R"({"key": "value})"); // Missing closing quote for string
-//     EXPECT_THROW(parseJSON(std::move(json)), std::runtime_error);
-// }
+TEST(JsonParserTest, UnterminatedString) {
+    std::istringstream json(
+        R"({"key": "value})"); // Missing closing quote for string
+    EXPECT_THROW(parseJSON(std::move(json)), std::runtime_error);
+}
 
 // edge cases
 TEST(JsonParserTest, EmptyObject) {
@@ -79,22 +79,20 @@ TEST(JsonParserTest, EmptyObject) {
     EXPECT_NO_THROW(parseJSON(std::move(json)));
 }
 
-// TEST(JsonParserTest, OnlyWhitespace) {
-//     std::istringstream json("   ");
-//     EXPECT_THROW(parseJSON(std::move(json)), std::runtime_error);
-// }
+TEST(JsonParserTest, OnlyWhitespace) {
+    std::istringstream json("   ");
+    EXPECT_THROW(parseJSON(std::move(json)), std::runtime_error);
+}
 
-// TEST(JsonParserTest, InvalidDataType) {
-//     std::istringstream json(R"({"key": invalid})");
-//     EXPECT_THROW(parseJSON(std::move(json)), std::runtime_error);
-// }
+TEST(JsonParserTest, InvalidDataType) {
+    std::istringstream json(R"({"key": invalid})");
+    EXPECT_THROW(parseJSON(std::move(json)), std::runtime_error);
+}
 
-// TEST(JsonParserTest, DuplicateKeys) {
-//     std::istringstream json(R"({"key": "value1", "key": "value2"})");
-//     auto result = parseJSON(std::move(json));
-//     EXPECT_EQ(result.Get("key").value(),
-//               "value2"); // Last key-value pair should overwrite
-// }
+TEST(JsonParserTest, DuplicateKeys) {
+    std::istringstream json(R"({"key": "value1", "key": "value2"})");
+    EXPECT_THROW(parseJSON(std::move(json)), std::runtime_error);
+}
 
 TEST(JsonParserTest, EmptyArray) {
     std::istringstream json(R"({"array": []})");

@@ -29,21 +29,21 @@ Json Parser::Parse() {
         json = ParseArray();
         break;
     default: {
-        std::cerr << "Invalid JSON String" << std::endl;
-        abort();
+        THROW_ERROR("Invalid JSON String");
     }
     }
     token = tokenizer.GetToken();
     if (token.type != TokenType::end) {
-        std::cerr << "Invalid JSON String" << std::endl;
-        abort();
+        THROW_ERROR("Invalid JSON String");
     }
     return json;
 }
 
 Json Parser::ParseQuotedString() {
     Token token = tokenizer.GetToken();
-    assert(token.type == TokenType::quoted_str && "Expected Quoted String\n");
+    if (token.type != TokenType::quoted_str) {
+        THROW_ERROR("Expected quoted string");
+    }
     return Json{.type = JsonType::jstring,
                 .value = std::make_shared<JsonString>(
                     std::get<std::string>(token.value))};
@@ -51,7 +51,9 @@ Json Parser::ParseQuotedString() {
 
 Json Parser::ParseNumber() {
     Token token = tokenizer.GetToken();
-    assert(token.type == TokenType::number && "Expected number\n");
+    if (token.type != TokenType::number) {
+        THROW_ERROR("Expected a number");
+    }
     return Json{
         .type = JsonType::jnumber,
         .value = std::make_shared<JsonNumber>(std::get<double>(token.value))};
@@ -59,7 +61,9 @@ Json Parser::ParseNumber() {
 
 Json Parser::ParseBool() {
     Token token = tokenizer.GetToken();
-    assert(token.type == TokenType::jbool && "Expected true|false\n");
+    if (token.type != TokenType::jbool) {
+        THROW_ERROR("Expected true|false");
+    }
     return Json{.type = JsonType::jbool,
                 .value =
                     std::make_shared<JsonBool>(std::get<bool>(token.value))};
@@ -67,21 +71,24 @@ Json Parser::ParseBool() {
 
 Json Parser::ParseNull() {
     Token token = tokenizer.GetToken();
-    assert(token.type == TokenType::jnull && "Expected null\n");
+    if (token.type != TokenType::jnull) {
+        THROW_ERROR("Expected null");
+    }
     return Json{.type = JsonType::jnull,
                 .value = std::make_shared<JsonNull>(JNull{})};
 }
 
 std::pair<std::string, Json> Parser::ParsePair() {
-    assert(tokenizer.PeekToken().type == TokenType::quoted_str &&
-           "Error parsing JSON pair: invalid Key\n");
+    if (tokenizer.PeekToken().type != TokenType::quoted_str) {
+        THROW_ERROR("Error parsing json object - invalid key");
+    }
 
     Token token = tokenizer.GetToken();
-
     auto key = std::get<std::string>(token.value);
 
-    assert(tokenizer.GetToken().type == TokenType::colon &&
-           "Error parsing JSON pair: expected colon\n");
+    if (tokenizer.GetToken().type != TokenType::colon) {
+        THROW_ERROR("Error parsing json object - expected ':'");
+    }
 
     switch (tokenizer.PeekToken().type) {
     case TokenType::quoted_str:
@@ -97,37 +104,36 @@ std::pair<std::string, Json> Parser::ParsePair() {
     case TokenType::left_bracket:
         return {key, ParseArray()};
     default: {
-        std::cerr << "Unexpected error parsing JSON object" << std::endl;
-        abort();
+        THROW_ERROR("Error parsing json object");
     }
     }
 }
 
 Json Parser::ParseObject() {
-    assert(tokenizer.GetToken().type == TokenType::left_braces &&
-           "Expected '{'\n");
+    if (tokenizer.GetToken().type != TokenType::left_braces) {
+        THROW_ERROR("Error parsing json object - expected '{'");
+    }
 
     std::unordered_map<std::string, Json> pairs;
     // This is required to parse empty objects!
     while (tokenizer.PeekToken().type != TokenType::right_braces) {
         auto [key, value] = ParsePair();
         if (pairs.contains(key)) {
-            std::cerr << "Error duplicate key: " << key << std::endl;
-            abort();
+            THROW_ERROR("Error duplicat key in json object");
         }
         pairs.emplace(key, std::move(value));
 
         switch (tokenizer.PeekToken().type) {
         case TokenType::comma: {
             tokenizer.GetToken();
-            assert(tokenizer.PeekToken().type != TokenType::right_braces &&
-                   "Unexpected error parsing JSON object");
+            if (tokenizer.PeekToken().type == TokenType::right_braces) {
+                THROW_ERROR("Error parsing json object - unexpected '}'");
+            }
         } break;
         case TokenType::right_braces:
             break;
         default: {
-            std::cerr << "Unexpected error parsing JSON object" << std::endl;
-            abort();
+            THROW_ERROR("Error parsing JSON object");
         }
         }
     }
@@ -138,8 +144,9 @@ Json Parser::ParseObject() {
 }
 
 Json Parser::ParseArray() {
-    assert(tokenizer.GetToken().type == TokenType::left_bracket &&
-           "Expected '['\n");
+    if (tokenizer.GetToken().type != TokenType::left_bracket) {
+        THROW_ERROR("Error parsing json arry - expected '['");
+    }
     std::vector<Json> arr;
     // This is required to parse empty arrays!
     while (tokenizer.PeekToken().type != TokenType::right_bracket) {
@@ -163,21 +170,20 @@ Json Parser::ParseArray() {
             arr.emplace_back(ParseArray());
         } break;
         default: {
-            std::cerr << "Unexpected error parsing JSON Array" << std::endl;
-            abort();
+            THROW_ERROR("Error parsing JSON array");
         }
         }
         switch (tokenizer.PeekToken().type) {
         case TokenType::comma: {
             tokenizer.GetToken();
-            assert(tokenizer.PeekToken().type != TokenType::right_bracket &&
-                   "Unexpected error parsing JSON Array");
+            if (tokenizer.PeekToken().type == TokenType::right_bracket) {
+                THROW_ERROR("Error parsing json object - unexpected ']'");
+            }
         } break;
         case TokenType::right_bracket:
             break;
         default: {
-            std::cerr << "Unexpected error parsing JSON Array" << std::endl;
-            abort();
+            THROW_ERROR("Error parsing JSON array");
         }
         }
     }

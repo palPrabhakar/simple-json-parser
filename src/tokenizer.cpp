@@ -81,8 +81,7 @@ void Tokenizer::ReadQuotedString() {
         c = static_cast<char>(token_stream.peek());
     }
     if (c == std::istringstream::traits_type::eof()) {
-        std::cerr << "Unexpected end of parsing." << std::endl;
-        std::abort();
+        THROW_ERROR("Unexpected end of parsing");
     }
     token_stream.get();
     token.type = TokenType::quoted_str;
@@ -111,19 +110,14 @@ void Tokenizer::ReadValue() {
             size_t len;
             double number = std::stod(value.str(), &len);
             if (len != value.str().size()) {
-                std::cerr << "Not a number" << std::endl;
-                std::abort();
+                THROW_ERROR("Error parsing json number");
             }
             token.type = TokenType::number;
             token.value = number;
         } catch (const std::invalid_argument &e) {
-            std::cerr << "invalid argument: " << e.what() << ": " << value.str()
-                      << std::endl;
-            std::abort();
+            THROW_ERROR("Error paring json number - invalid argument");
         } catch (const std::out_of_range &e) {
-            std::cerr << "out of range: " << e.what() << ": " << value.str()
-                      << std::endl;
-            std::abort();
+            THROW_ERROR("Error paring json number - number out of range");
         }
     }
 }
