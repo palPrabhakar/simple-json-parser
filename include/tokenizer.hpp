@@ -1,13 +1,13 @@
 #pragma once
 
+#include <format>
 #include <sstream>
 #include <string>
 #include <variant>
-#include <format>
 
 #define THROW_ERROR(msg)                                                       \
     throw std::runtime_error(                                                  \
-        std::format("{} at {} in {}.\n", msg, __LINE__, __FILE__));
+        std::format("{} at {} in {}.", msg, __LINE__, __FILE__));
 
 enum class TokenType {
     start,

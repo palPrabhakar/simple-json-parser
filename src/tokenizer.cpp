@@ -72,7 +72,7 @@ void Tokenizer::ReadQuotedString() {
         if (c == '\\') {
             value << static_cast<char>(token_stream.get());
             c = static_cast<char>(token_stream.peek());
-            if (c != '"' && c != '\\') {
+            if (!(c != '"' || c != '\\' || c != '\n' || c == '\t')) {
                 THROW_ERROR("Invalid char after escape sequence");
             }
         }
