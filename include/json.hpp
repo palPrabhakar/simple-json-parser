@@ -1,5 +1,6 @@
 #pragma once
 
+#include <concepts>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -9,7 +10,13 @@
 #include <vector>
 
 enum class JsonType { jstring, jnumber, jnull, jbool, jobject, jarray };
+
 struct JNull {};
+template <typename> class JsonValue;
+using JsonNumber = JsonValue<double>;
+using JsonString = JsonValue<std::string>;
+using JsonBool = JsonValue<bool>;
+using JsonNull = JsonValue<JNull>;
 
 // base class for json
 class Base {
@@ -23,9 +30,11 @@ class Base {
         std::optional<Json> Get(size_t idx) const { // json-array
             return value->Get(idx);
         }
+
         std::optional<Json> Get(std::string key) const { // json-object
             return value->Get(key);
         }
+
         template <typename RetType> std::optional<RetType> Get() const {
             if constexpr (std::is_same_v<RetType, std::string>) {
                 return value->GetString();
@@ -37,6 +46,25 @@ class Base {
                 return std::nullopt;
             }
         }
+
+        template <typename T>
+            requires std::constructible_from<std::string, T>
+        void Set(T t) {
+            SetString(t);
+        }
+
+        template <typename T>
+            requires std::constructible_from<double, T>
+        void Set(T t) {
+            SetNumber(t);
+        }
+
+        void Set(bool);
+        void Set(JNull);
+
+      private:
+        void SetString(std::string);
+        void SetNumber(double);
     };
 
     virtual ~Base() = default;
@@ -54,9 +82,9 @@ class Base {
 template <typename ValueType> class JsonValue : public Base {
   public:
     JsonValue(ValueType val) : value(val) {}
+    ValueType value;
 
   private:
-    ValueType value;
     void PrintImpl() override { std::cout << value; }
 
     std::optional<std::string> GetString() override {
@@ -66,6 +94,7 @@ template <typename ValueType> class JsonValue : public Base {
             return std::nullopt;
         }
     }
+
     std::optional<double> GetNumber() override {
         if constexpr (std::is_same_v<ValueType, double>) {
             return value;
@@ -73,6 +102,7 @@ template <typename ValueType> class JsonValue : public Base {
             return std::nullopt;
         }
     }
+
     std::optional<bool> GetBool() override {
         if constexpr (std::is_same_v<ValueType, bool>) {
             return value;
@@ -95,6 +125,7 @@ class JsonObject : public Base {
 
   private:
     std::unordered_map<std::string, Json> value;
+
     void PrintImpl() override {
         std::cout << "{";
         if (!value.empty()) {
@@ -122,6 +153,7 @@ class JsonArray : public Base {
 
   private:
     std::vector<Json> value;
+
     void PrintImpl() override {
         std::cout << "[";
         if (!value.empty()) {
@@ -142,7 +174,27 @@ class JsonArray : public Base {
 };
 
 using Json = Base::Json;
-using JsonNumber = JsonValue<double>;
-using JsonString = JsonValue<std::string>;
-using JsonBool = JsonValue<bool>;
-using JsonNull = JsonValue<JNull>;
+
+// How about?
+// if (type == JsonType::jbool) {
+//     auto ptr = std::static_pointer_cast<JsonBool>(this->value);
+//     ptr->value = value;
+// } else {
+//     this->value = std::make_shared<JsonBool>(value);
+// }
+__attribute__((__always_inline__)) inline void Json::Set(bool value) {
+    this->value = std::make_shared<JsonBool>(value);
+}
+
+__attribute__((__always_inline__)) inline void
+Json::SetString(std::string value) {
+    this->value = std::make_shared<JsonString>(std::move(value));
+}
+
+__attribute__((__always_inline__)) inline void Json::SetNumber(double value) {
+    this->value = std::make_shared<JsonNumber>(value);
+}
+
+__attribute__((__always_inline__)) inline void Json::Set(JNull value) {
+    this->value = std::make_shared<JsonNull>(value);
+}

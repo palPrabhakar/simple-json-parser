@@ -1,69 +1,36 @@
 #include <iostream>
 
+#include "json.hpp"
 #include "parser.hpp"
-
-#define TEST(x)                                                                \
-    std::cout << "InputString: " << x.str() << std::endl;                      \
-    Parser parser(std::move(x));                                               \
-    auto json = parser.Parse();                                                \
-    json.Dump();                                                               \
-    std::cout << std::endl;
 
 int main(void) {
     std::cout << "Simple JSON Parser" << std::endl;
 
-    // {
-    //     std::istringstream ss("\"lol\"");
-    //     TEST(ss);
-    // }
-
-    // {
-    //     std::istringstream ss("1.24");
-    //     TEST(ss);
-    // }
-
-    // {
-    //     std::istringstream ss("true");
-    //     TEST(ss);
-    // }
-
-    // {
-    //     std::istringstream ss("null");
-    //     TEST(ss);
-    // }
-
-    // {
-    //     std::istringstream ss("{\"key \\\"1\":1}");
-    //     TEST(ss);
-    // }
-
-    // {
-    //     std::istringstream ss(
-    //         "{\"key1\":1, \"key2\": \"lol\", \"key3\": null}");
-    //     TEST(ss);
-    // }
-
     {
-        std::istringstream ss("[true, null, 1]");
+        std::istringstream ss(R"(["true", null, 1])");
         // TEST(ss);
         Parser parser(std::move(ss));
         auto json = parser.Parse();
         auto j = json.Get(0);
-        std::cout << j.value().Get<bool>().value();
-        std::cout << std::endl;
+        j.value().Set("lol - const char *");
+        std::cout<<j.value().Get<std::string>().value()<<std::endl;
+        j.value().Set(42.0);
+        std::cout<<j.value().Get<double>().value()<<std::endl;
+        int i0 = 44;
+        j.value().Set(i0);
+        std::cout<<j.value().Get<double>().value()<<std::endl;
+        j.value().Set(true);
+        std::cout<<j.value().Get<bool>().value()<<std::endl;
+        j.value().Set(JNull{});
+        // std::cout<<j.value().Get<bool>().value()<<std::endl;
+        const std::string lol = "lol-std::string";
+        char lol0[] = "lol char *";
+        json.Set(lol0);
+        std::cout<<json.Get<std::string>().value()<<std::endl;
+        json.Set(lol);
+        std::cout<<json.Get<std::string>().value()<<std::endl;
+
     }
-
-    // {
-    //     std::istringstream ss(
-    //         "{\"key1\":1, \"key2\": \"lol\", \"key3\": null, \"key4\": "
-    //         "{\"key1\":1, \"key2\": \"lol\", \"key3\": null}}");
-    //     TEST(ss);
-    // }
-
-    // {
-    //     std::istringstream ss("[true, null, 1, [true, null, 1]]");
-    //     TEST(ss);
-    // }
 
     return 0;
 }
