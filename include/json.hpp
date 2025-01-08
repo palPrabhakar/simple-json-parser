@@ -58,22 +58,6 @@ class Base {
 
         template <typename T>
             requires JVal<T>
-        void Set(T val) {
-            if constexpr (std::is_constructible_v<std::string, T>) {
-                SetString(val);
-            } else if constexpr (std::is_same_v<bool, T>) {
-                SetBool(val);
-            } else if constexpr (std::is_constructible_v<double, T>) {
-                SetNumber(val);
-            } else if constexpr (std::is_same_v<JNull, T>) {
-                SetNull(val);
-            } else {
-                assert(false);
-            }
-        }
-
-        template <typename T>
-            requires JVal<T>
         void AppendOrUpdate(size_t idx, T val) {
             if (type != JsonType::jarray) {
                 this->value = JsonBuilder<JsonType::jarray>();
@@ -260,23 +244,6 @@ template <JsonType type> std::shared_ptr<Base> JsonBuilder() {
     } else {
         return std::make_shared<JsonNull>(JNull{});
     }
-}
-
-__attribute__((__always_inline__)) inline void Json::SetBool(bool value) {
-    this->value = std::make_shared<JsonBool>(value);
-}
-
-__attribute__((__always_inline__)) inline void
-Json::SetString(std::string value) {
-    this->value = std::make_shared<JsonString>(std::move(value));
-}
-
-__attribute__((__always_inline__)) inline void Json::SetNumber(double value) {
-    this->value = std::make_shared<JsonNumber>(value);
-}
-
-__attribute__((__always_inline__)) inline void Json::SetNull(JNull val) {
-    this->value = std::make_shared<JsonNull>(val);
 }
 
 __attribute__((__always_inline__)) inline void
