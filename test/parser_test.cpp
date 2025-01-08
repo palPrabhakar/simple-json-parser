@@ -3,7 +3,13 @@
 #include <sstream>
 
 Json parseJSON(std::istringstream json) {
-    Parser parser(std::move(std::move(json)));
+    Parser parser(std::move(json));
+    return parser.Parse();
+}
+
+Json parseJSON(std::string json_str) {
+    std::istringstream json(json_str);
+    Parser parser(std::move(json));
     return parser.Parse();
 }
 
@@ -313,4 +319,152 @@ TEST(JsonParserTest, JSONWithComments) {
     auto result = parseJSON(std::move(json));
     EXPECT_EQ(result.Get("key").value().Get<std::string>(), "value");
     EXPECT_EQ(result.Get("number").value().Get<double>(), 42);
+}
+
+/*
+ * Test Insert/Append/Update
+ */
+
+TEST(JsonParserTest, AddSimpleObject) {
+    auto json = parseJSON("{}");
+    json.InsertOrUpdate("key", "value");
+    EXPECT_EQ(json.Get("key").value().Get<std::string>(), "value");
+}
+
+TEST(JsonParserTest, AddSimpleArray) {
+    auto json = parseJSON("[]");
+    json.AppendOrUpdate(Json::end, "value");
+    EXPECT_EQ(json.Get(0).value().Get<std::string>(), "value");
+}
+
+TEST(JsonParserTest, AddNestedObject) {
+    auto json = parseJSON("{}");
+    json.InsertOrUpdate("user", parseJSON("{}"));
+    json.Get("user").value().InsertOrUpdate("name", "Alice");
+    EXPECT_EQ(json.Get("user").value().Get("name").value().Get<std::string>(),
+              "Alice");
+}
+
+TEST(JsonParserTest, AddNestedArray) {
+    auto json = parseJSON("[]");
+    json.AppendOrUpdate(Json::end, parseJSON("[]"));
+    json.Get(0).value().AppendOrUpdate(Json::end, "Alice");
+    EXPECT_EQ(json.Get(0).value().Get(0).value().Get<std::string>(), "Alice");
+}
+
+TEST(JsonParserTest, AddToObjArray) {
+    auto json = parseJSON(R"({"array": []})");
+    json.Get("array").value().AppendOrUpdate(
+        Json::end, 1); // "" indicates appending to an array
+    json.Get("array").value().AppendOrUpdate(Json::end, 2);
+    EXPECT_EQ(json.Get("array").value().Get(0).value().Get<double>(), 1);
+    EXPECT_EQ(json.Get("array").value().Get(1).value().Get<double>(), 2);
+}
+
+TEST(JsonParserTest, ModifyObject) {
+    auto json = parseJSON(R"({"key": "initial"})");
+    json.InsertOrUpdate("key", "new value");
+    EXPECT_EQ(json.Get("key").value().Get<std::string>(), "new value");
+}
+
+TEST(JsonParserTest, ModifyArray) {
+    auto json = parseJSON(R"(["key", "initial"])");
+    json.AppendOrUpdate(0, "new value");
+    EXPECT_EQ(json.Get(0).value().Get<std::string>(), "new value");
+}
+
+TEST(JsonParserTest, ModifyNestedObject) {
+    auto json = parseJSON(R"({"user": {"name": "Alice"}})");
+    json.Get("user").value().InsertOrUpdate("name", "Bob");
+    EXPECT_EQ(json.Get("user").value().Get("name").value().Get<std::string>(),
+              "Bob");
+}
+
+TEST(JsonParserTest, ModifyNestedArray) {
+    auto json = parseJSON(R"(["user", ["name", "Alice"]])");
+    json.Get(1).value().AppendOrUpdate(0, "Bob");
+    EXPECT_EQ(json.Get(1).value().Get(0).value().Get<std::string>(), "Bob");
+}
+
+TEST(JsonParserTest, ModifyArrayValue) {
+    auto json = parseJSON(R"({"array": [1, 2, 3]})");
+    json.Get("array").value().AppendOrUpdate(1,
+                                             42); // Modify the second element
+    EXPECT_EQ(json.Get("array").value().Get(1).value().Get<double>(), 42);
+}
+
+TEST(JsonParserTest, ModifyObjectValue) {
+    auto json = parseJSON(R"([{"array": [1, 2, 3]}])");
+    json.Get(0).value().Get("array").value().AppendOrUpdate(
+        1,
+        42); // Modify the second element
+    EXPECT_EQ(
+        json.Get(0).value().Get("array").value().Get(1).value().Get<double>(),
+        42);
+}
+
+TEST(JsonParserTest, AddAndModifyObject) {
+    auto json = parseJSON("{}");
+    json.InsertOrUpdate("key", "initial");
+    EXPECT_EQ(json.Get("key").value().Get<std::string>(), "initial");
+    json.InsertOrUpdate("key", "modified");
+    EXPECT_EQ(json.Get("key").value().Get<std::string>(), "modified");
+}
+
+TEST(JsonParserTest, AddAndModifyArray) {
+    auto json = parseJSON("[]");
+    json.AppendOrUpdate(0, "initial");
+    EXPECT_EQ(json.Get(0).value().Get<std::string>(), "initial");
+    json.AppendOrUpdate(0, "modified");
+    EXPECT_EQ(json.Get(0).value().Get<std::string>(), "modified");
+}
+
+TEST(JsonParserTest, AddAndModifyNestedObject) {
+    auto json = parseJSON(R"({"user": {}})");
+    json.Get("user").value().InsertOrUpdate("age", 25);
+    EXPECT_EQ(json.Get("user").value().Get("age").value().Get<double>(), 25);
+    json.Get("user").value().InsertOrUpdate("age", 26);
+    EXPECT_EQ(json.Get("user").value().Get("age").value().Get<double>(), 26);
+}
+
+TEST(JsonParserTest, AddAndModifyNestedArray) {
+    auto json = parseJSON(R"([[]])");
+    json.Get(0).value().AppendOrUpdate(Json::end, 25);
+    EXPECT_EQ(json.Get(0).value().Get(0).value().Get<double>(), 25);
+    json.Get(0).value().AppendOrUpdate(0, 26);
+    EXPECT_EQ(json.Get(0).value().Get(0).value().Get<double>(), 26);
+}
+
+TEST(JsonParserTest, AddNullObject) {
+    auto json = parseJSON("{}");
+    json.InsertOrUpdate("key", JNull{});
+    EXPECT_EQ(json.Get("key").value().Get<bool>(), std::nullopt);
+}
+
+TEST(JsonParserTest, AddNullArray) {
+    auto json = parseJSON("[]");
+    json.AppendOrUpdate(0, JNull{});
+    EXPECT_EQ(json.Get(0).value().Get<bool>(), std::nullopt);
+}
+
+TEST(JsonParserTest, AddLargeData) {
+    auto json = parseJSON("{}");
+    std::string largeData(10000, 'x');
+    json.InsertOrUpdate("large", largeData);
+    EXPECT_EQ(json.Get("large").value().Get<std::string>(), largeData);
+}
+
+TEST(JsonParserTest, AddDeeplyNestedKey) {
+    auto json = parseJSON("{}");
+    auto nested = parseJSON("{}");
+    nested.InsertOrUpdate("key", "value");
+    json.InsertOrUpdate("level1", nested);
+    EXPECT_EQ(json.Get("level1").value().Get("key").value().Get<std::string>(),
+              "value");
+}
+
+TEST(JsonParserTest, ModifyType) {
+    auto json = parseJSON(R"({"key": "value"})");
+    json.InsertOrUpdate("key", 42);
+    EXPECT_EQ(json.Get("key").value().Get<double>(), 42);
 }
