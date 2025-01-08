@@ -35,7 +35,10 @@ class Base {
         std::shared_ptr<Base> value;
         constexpr static size_t end = -1UL;
 
-        void Dump() const { value->Print(); }
+        void Dump() const {
+            value->Print();
+            std::cout << "\n";
+        }
 
         std::optional<Json> Get(size_t idx) const { // json-array
             return value->Get(idx);
