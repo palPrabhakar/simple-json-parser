@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <concepts>
 #include <iostream>
 #include <memory>
@@ -17,6 +18,14 @@ using JsonNumber = JsonValue<double>;
 using JsonString = JsonValue<std::string>;
 using JsonBool = JsonValue<bool>;
 using JsonNull = JsonValue<JNull>;
+
+template <typename T>
+concept JVal =
+    std::constructible_from<std::string, T> ||
+    std::constructible_from<double, T> || std::constructible_from<JNull, T>;
+
+class Base;
+template <JsonType> std::shared_ptr<Base> JsonBuilder();
 
 // base class for json
 class Base {
@@ -48,23 +57,74 @@ class Base {
         }
 
         template <typename T>
-            requires std::constructible_from<std::string, T>
-        void Set(T t) {
-            SetString(t);
+            requires JVal<T>
+        void Set(T val) {
+            if constexpr (std::is_constructible_v<std::string, T>) {
+                SetString(val);
+            } else if constexpr (std::is_same_v<bool, T>) {
+                SetBool(val);
+            } else if constexpr (std::is_constructible_v<double, T>) {
+                SetNumber(val);
+            } else if constexpr (std::is_same_v<JNull, T>) {
+                SetNull(val);
+            } else {
+                assert(false);
+            }
         }
 
         template <typename T>
-            requires std::constructible_from<double, T>
-        void Set(T t) {
-            SetNumber(t);
+            requires JVal<T>
+        void AppendOrUpdate(size_t idx, T val) {
+            if (type != JsonType::jarray) {
+                this->value = JsonBuilder<JsonType::jarray>();
+            }
+
+            if constexpr (std::is_constructible_v<std::string, T>) {
+                AppendOrUpdateString(idx, val);
+            } else if constexpr (std::is_same_v<bool, T>) {
+                AppendOrUpdateBool(idx, val);
+            } else if constexpr (std::is_constructible_v<double, T>) {
+                AppendOrUpdateNumber(idx, val);
+            } else if constexpr (std::is_same_v<JNull, T>) {
+                AppendOrUpdateNull(idx, val);
+            } else {
+                assert(false);
+            }
         }
 
-        void Set(bool);
-        void Set(JNull);
+        template <typename T>
+            requires JVal<T>
+        void InsertOrUpdate(std::string key, T val) {
+            if (type != JsonType::jobject) {
+                this->value = JsonBuilder<JsonType::jobject>();
+            }
+
+            if constexpr (std::is_constructible_v<std::string, T>) {
+                InsertOrUpdateString(key, val);
+            } else if constexpr (std::is_same_v<bool, T>) {
+                InsertOrUpdateBool(key, val);
+            } else if constexpr (std::is_constructible_v<double, T>) {
+                InsertOrUpdateNumber(key, val);
+            } else if constexpr (std::is_same_v<JNull, T>) {
+                InsertOrUpdateNull(key, val);
+            } else {
+                assert(false);
+            }
+        }
 
       private:
-        void SetString(std::string);
+        void SetBool(bool);
+        void SetNull(JNull);
         void SetNumber(double);
+        void SetString(std::string);
+        void AppendOrUpdateBool(size_t, bool);
+        void AppendOrUpdateNull(size_t, JNull);
+        void AppendOrUpdateNumber(size_t, double);
+        void AppendOrUpdateString(size_t, std::string);
+        void InsertOrUpdateBool(std::string, bool);
+        void InsertOrUpdateNull(std::string, JNull);
+        void InsertOrUpdateNumber(std::string, double);
+        void InsertOrUpdateString(std::string, std::string);
     };
 
     virtual ~Base() = default;
@@ -123,6 +183,8 @@ class JsonObject : public Base {
     JsonObject(std::unordered_map<std::string, Json> val)
         : value(std::move(val)) {}
 
+    void InsertOrUpdate(std::string key, Json val) { value[key] = val; }
+
   private:
     std::unordered_map<std::string, Json> value;
 
@@ -151,6 +213,14 @@ class JsonArray : public Base {
   public:
     JsonArray(std::vector<Json> val) : value(std::move(val)) {}
 
+    void AppendOrUpdate(size_t idx, Json json) {
+        if (idx < value.size()) {
+            value[idx] = std::move(json);
+        } else {
+            value.push_back(std::move(json));
+        }
+    }
+
   private:
     std::vector<Json> value;
 
@@ -175,14 +245,24 @@ class JsonArray : public Base {
 
 using Json = Base::Json;
 
-// How about?
-// if (type == JsonType::jbool) {
-//     auto ptr = std::static_pointer_cast<JsonBool>(this->value);
-//     ptr->value = value;
-// } else {
-//     this->value = std::make_shared<JsonBool>(value);
-// }
-__attribute__((__always_inline__)) inline void Json::Set(bool value) {
+template <JsonType type> std::shared_ptr<Base> JsonBuilder() {
+    if constexpr (type == JsonType::jarray) {
+        return std::make_shared<JsonArray>(std::vector<Json>{});
+    } else if constexpr (type == JsonType::jobject) {
+        return std::make_shared<JsonObject>(
+            std::unordered_map<std::string, Json>{});
+    } else if constexpr (type == JsonType::jstring) {
+        return std::make_shared<JsonString>("");
+    } else if constexpr (type == JsonType::jnumber) {
+        return std::make_shared<JsonString>(0.0);
+    } else if constexpr (type == JsonType::jbool) {
+        return std::make_shared<JsonString>(false);
+    } else {
+        return std::make_shared<JsonNull>(JNull{});
+    }
+}
+
+__attribute__((__always_inline__)) inline void Json::SetBool(bool value) {
     this->value = std::make_shared<JsonBool>(value);
 }
 
@@ -195,6 +275,64 @@ __attribute__((__always_inline__)) inline void Json::SetNumber(double value) {
     this->value = std::make_shared<JsonNumber>(value);
 }
 
-__attribute__((__always_inline__)) inline void Json::Set(JNull value) {
-    this->value = std::make_shared<JsonNull>(value);
+__attribute__((__always_inline__)) inline void Json::SetNull(JNull val) {
+    this->value = std::make_shared<JsonNull>(val);
+}
+
+__attribute__((__always_inline__)) inline void
+Json::AppendOrUpdateNull(size_t idx, JNull val) {
+    auto ptr = std::static_pointer_cast<JsonArray>(value);
+    ptr->AppendOrUpdate(idx, {.type = JsonType::jnull,
+                              .value = std::make_shared<JsonNull>(val)});
+}
+
+__attribute__((__always_inline__)) inline void
+Json::AppendOrUpdateString(size_t idx, std::string val) {
+    auto ptr = std::static_pointer_cast<JsonArray>(value);
+    ptr->AppendOrUpdate(
+        idx, {.type = JsonType::jstring,
+              .value = std::make_shared<JsonString>(std::move(val))});
+}
+
+__attribute__((__always_inline__)) inline void
+Json::AppendOrUpdateNumber(size_t idx, double val) {
+    auto ptr = std::static_pointer_cast<JsonArray>(value);
+    ptr->AppendOrUpdate(idx, {.type = JsonType::jnumber,
+                              .value = std::make_shared<JsonNumber>(val)});
+}
+
+__attribute__((__always_inline__)) inline void
+Json::AppendOrUpdateBool(size_t idx, bool val) {
+    auto ptr = std::static_pointer_cast<JsonArray>(value);
+    ptr->AppendOrUpdate(idx, {.type = JsonType::jbool,
+                              .value = std::make_shared<JsonBool>(val)});
+}
+
+__attribute__((__always_inline__)) inline void
+Json::InsertOrUpdateNull(std::string key, JNull val) {
+    auto ptr = std::static_pointer_cast<JsonObject>(value);
+    ptr->InsertOrUpdate(key, {.type = JsonType::jnull,
+                              .value = std::make_shared<JsonNull>(val)});
+}
+
+__attribute__((__always_inline__)) inline void
+Json::InsertOrUpdateString(std::string key, std::string val) {
+    auto ptr = std::static_pointer_cast<JsonObject>(value);
+    ptr->InsertOrUpdate(
+        key, {.type = JsonType::jnull,
+              .value = std::make_shared<JsonString>(std::move(val))});
+}
+
+__attribute__((__always_inline__)) inline void
+Json::InsertOrUpdateNumber(std::string key, double val) {
+    auto ptr = std::static_pointer_cast<JsonObject>(value);
+    ptr->InsertOrUpdate(key, {.type = JsonType::jnull,
+                              .value = std::make_shared<JsonNumber>(val)});
+}
+
+__attribute__((__always_inline__)) inline void
+Json::InsertOrUpdateBool(std::string key, bool val) {
+    auto ptr = std::static_pointer_cast<JsonObject>(value);
+    ptr->InsertOrUpdate(key, {.type = JsonType::jnull,
+                              .value = std::make_shared<JsonBool>(val)});
 }

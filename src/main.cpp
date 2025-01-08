@@ -7,29 +7,52 @@ int main(void) {
     std::cout << "Simple JSON Parser" << std::endl;
 
     {
-        std::istringstream ss(R"(["true", null, 1])");
-        // TEST(ss);
+        auto json =
+            Json{.type = JsonType::jarray,
+                 .value = std::make_shared<JsonArray>(std::vector<Json>{})};
+        json.AppendOrUpdate(-1UL, 42);
+        json.AppendOrUpdate(-1UL, true);
+        json.AppendOrUpdate(-1UL, "lol");
+        json.Dump();
+        std::cout << std::endl;
+    }
+
+    {
+        std::istringstream ss(R"([1, [2, [3]]])");
         Parser parser(std::move(ss));
         auto json = parser.Parse();
-        auto j = json.Get(0);
-        j.value().Set("lol - const char *");
-        std::cout<<j.value().Get<std::string>().value()<<std::endl;
-        j.value().Set(42.0);
-        std::cout<<j.value().Get<double>().value()<<std::endl;
-        int i0 = 44;
-        j.value().Set(i0);
-        std::cout<<j.value().Get<double>().value()<<std::endl;
-        j.value().Set(true);
-        std::cout<<j.value().Get<bool>().value()<<std::endl;
-        j.value().Set(JNull{});
-        // std::cout<<j.value().Get<bool>().value()<<std::endl;
-        const std::string lol = "lol-std::string";
-        char lol0[] = "lol char *";
-        json.Set(lol0);
-        std::cout<<json.Get<std::string>().value()<<std::endl;
-        json.Set(lol);
-        std::cout<<json.Get<std::string>().value()<<std::endl;
+        json.AppendOrUpdate(0, "lol");
+        auto j1 = json.Get(1);
+        j1.value().AppendOrUpdate(0, "lol");
+        auto j2 = j1.value().Get(1);
+        j2.value().AppendOrUpdate(0, "lol");
+        json.Dump();
+        std::cout << std::endl;
+    }
 
+    {
+        auto json = Json{.type = JsonType::jobject,
+                         .value = std::make_shared<JsonObject>(
+                             std::unordered_map<std::string, Json>{})};
+        json.InsertOrUpdate("1", 42);
+        json.InsertOrUpdate("2", true);
+        json.InsertOrUpdate("3", "lol");
+        json.Dump();
+        std::cout << std::endl;
+    }
+
+    {
+        std::istringstream ss(
+            R"({"1": "1", "2": {"2": "2", "3": {"3": "3"}}})");
+        Parser parser(std::move(ss));
+        auto json = parser.Parse();
+        json.InsertOrUpdate("1", "lol");
+        auto j1 = json.Get("2");
+        j1.value().InsertOrUpdate("2", "lol");
+        auto j2 = j1.value().Get("3");
+        j2.value().InsertOrUpdate("3", "lol");
+        json.Dump();
+        std::cout << std::endl;
     }
 
     return 0;
