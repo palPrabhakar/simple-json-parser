@@ -10,25 +10,35 @@ int main(void) {
         auto json =
             Json{.type = JsonType::jarray,
                  .value = std::make_shared<JsonArray>(std::vector<Json>{})};
-        json.AppendOrUpdate(-1UL, 42);
-        json.AppendOrUpdate(-1UL, true);
-        json.AppendOrUpdate(-1UL, "lol");
+        json.AppendOrUpdate(Json::end, 42);
+        json.AppendOrUpdate(Json::end, true);
+        json.AppendOrUpdate(Json::end, "lol");
+
+        json.Dump();
+        std::cout << std::endl;
+
+        Json jarray = JsonBuilder<JsonType::jarray>();
+        jarray.AppendOrUpdate(Json::end, "A");
+        jarray.AppendOrUpdate(Json::end, "B");
+        jarray.AppendOrUpdate(Json::end, "C");
+
+        json.AppendOrUpdate(2, jarray);
         json.Dump();
         std::cout << std::endl;
     }
 
-    {
-        std::istringstream ss(R"([1, [2, [3]]])");
-        Parser parser(std::move(ss));
-        auto json = parser.Parse();
-        json.AppendOrUpdate(0, "lol");
-        auto j1 = json.Get(1);
-        j1.value().AppendOrUpdate(0, "lol");
-        auto j2 = j1.value().Get(1);
-        j2.value().AppendOrUpdate(0, "lol");
-        json.Dump();
-        std::cout << std::endl;
-    }
+    // {
+    //     std::istringstream ss(R"([1, [2, [3]]])");
+    //     Parser parser(std::move(ss));
+    //     auto json = parser.Parse();
+    //     json.AppendOrUpdate(0, "lol");
+    //     auto j1 = json.Get(1);
+    //     j1.value().AppendOrUpdate(0, "lol");
+    //     auto j2 = j1.value().Get(1);
+    //     j2.value().AppendOrUpdate(0, "lol");
+    //     json.Dump();
+    //     std::cout << std::endl;
+    // }
 
     {
         auto json = Json{.type = JsonType::jobject,
@@ -39,21 +49,30 @@ int main(void) {
         json.InsertOrUpdate("3", "lol");
         json.Dump();
         std::cout << std::endl;
-    }
 
-    {
-        std::istringstream ss(
-            R"({"1": "1", "2": {"2": "2", "3": {"3": "3"}}})");
-        Parser parser(std::move(ss));
-        auto json = parser.Parse();
-        json.InsertOrUpdate("1", "lol");
-        auto j1 = json.Get("2");
-        j1.value().InsertOrUpdate("2", "lol");
-        auto j2 = j1.value().Get("3");
-        j2.value().InsertOrUpdate("3", "lol");
+        auto jobj = JsonBuilder<JsonType::jobject>();
+        jobj.InsertOrUpdate("1", "one");
+        jobj.InsertOrUpdate("2", "two");
+        jobj.InsertOrUpdate("3", "three");
+
+        json.InsertOrUpdate("3", std::move(jobj));
         json.Dump();
         std::cout << std::endl;
     }
+
+    // {
+    //     std::istringstream ss(
+    //         R"({"1": "1", "2": {"2": "2", "3": {"3": "3"}}})");
+    //     Parser parser(std::move(ss));
+    //     auto json = parser.Parse();
+    //     json.InsertOrUpdate("1", "lol");
+    //     auto j1 = json.Get("2");
+    //     j1.value().InsertOrUpdate("2", "lol");
+    //     auto j2 = j1.value().Get("3");
+    //     j2.value().InsertOrUpdate("3", "lol");
+    //     json.Dump();
+    //     std::cout << std::endl;
+    // }
 
     return 0;
 }
