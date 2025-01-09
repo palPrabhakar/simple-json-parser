@@ -41,6 +41,8 @@ class Base {
             std::cout << "\n";
         }
 
+        size_t Size() const { return value->Size(); }
+
         std::optional<Json> Get(size_t idx) const { // json-array
             return value->Get(idx);
         }
@@ -123,15 +125,17 @@ class Base {
     };
 
     virtual ~Base() = default;
-    void Print() { PrintImpl(); }
+    void Print() const { PrintImpl(); }
+    size_t Size() const { return SizeImpl(); }
 
   private:
-    virtual void PrintImpl() = 0;
+    virtual void PrintImpl() const = 0;
     virtual std::optional<Json> Get(size_t) { return std::nullopt; }
     virtual std::optional<Json> Get(std::string) { return std::nullopt; }
     virtual std::optional<std::string> GetString() { return std::nullopt; }
     virtual std::optional<double> GetNumber() { return std::nullopt; }
     virtual std::optional<bool> GetBool() { return std::nullopt; }
+    virtual size_t SizeImpl() const { return 0; }
 };
 
 template <typename ValueType> class JsonValue : public Base {
@@ -140,7 +144,7 @@ template <typename ValueType> class JsonValue : public Base {
     ValueType value;
 
   private:
-    void PrintImpl() override { std::cout << value; }
+    void PrintImpl() const override { std::cout << value; }
 
     std::optional<std::string> GetString() override {
         if constexpr (std::is_same_v<ValueType, std::string>) {
@@ -167,9 +171,11 @@ template <typename ValueType> class JsonValue : public Base {
     }
 };
 
-template <> inline void JsonValue<JNull>::PrintImpl() { std::cout << "null"; }
+template <> inline void JsonValue<JNull>::PrintImpl() const {
+    std::cout << "null";
+}
 
-template <> inline void JsonValue<bool>::PrintImpl() {
+template <> inline void JsonValue<bool>::PrintImpl() const {
     std::cout << (value ? "true" : "false");
 }
 
@@ -185,7 +191,7 @@ class JsonObject : public Base {
   private:
     std::unordered_map<std::string, Json> value;
 
-    void PrintImpl() override {
+    void PrintImpl() const override {
         std::cout << "{";
         if (!value.empty()) {
             auto &[key, val] = *value.begin();
@@ -200,6 +206,8 @@ class JsonObject : public Base {
         }
         std::cout << "}";
     }
+
+    size_t SizeImpl() const override { return value.size(); }
 
     std::optional<Json> Get(std::string key) override {
         return value.contains(key) ? std::optional(value[key]) : std::nullopt;
@@ -221,7 +229,7 @@ class JsonArray : public Base {
   private:
     std::vector<Json> value;
 
-    void PrintImpl() override {
+    void PrintImpl() const override {
         std::cout << "[";
         if (!value.empty()) {
             auto &val = value[0];
@@ -234,6 +242,8 @@ class JsonArray : public Base {
         }
         std::cout << "]";
     }
+
+    size_t SizeImpl() const override { return value.size(); }
 
     std::optional<Json> Get(size_t idx) override {
         return idx < value.size() ? std::optional(value[idx]) : std::nullopt;
