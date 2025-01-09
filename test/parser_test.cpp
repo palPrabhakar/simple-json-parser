@@ -1,3 +1,4 @@
+#include "json.hpp"
 #include "parser.hpp"
 #include <gtest/gtest.h>
 #include <sstream>
@@ -469,4 +470,18 @@ TEST(JsonParserTest, ModifyType) {
     auto json = parseJSON(R"({"key": "value"})");
     json.InsertOrUpdate("key", 42);
     EXPECT_EQ(json.Get("key").value().Get<double>(), 42);
+}
+
+TEST(JsonParserTest, ModifyObjectToArray) {
+    auto json = parseJSON(R"({})");
+    json.AppendOrUpdate(Json::end, 0);
+    json.AppendOrUpdate(Json::end, 1);
+    EXPECT_EQ(json.Size(), 2);
+}
+
+TEST(JsonParserTest, ModifyArrayToObject) {
+    auto json = parseJSON(R"([])");
+    json.InsertOrUpdate("0", 0);
+    json.InsertOrUpdate("1", 1);
+    EXPECT_EQ(json.Size(), 2);
 }

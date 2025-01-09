@@ -68,6 +68,7 @@ class Base {
         void AppendOrUpdate(size_t idx, T val) {
             if (type != JsonType::jarray) {
                 this->value = BaseBuilder<JsonType::jarray>();
+                this->type = JsonType::jarray;
             }
 
             if constexpr (std::is_constructible_v<std::string, T>) {
@@ -92,6 +93,7 @@ class Base {
         void InsertOrUpdate(std::string key, T val) {
             if (type != JsonType::jobject) {
                 this->value = BaseBuilder<JsonType::jobject>();
+                this->type = JsonType::jobject;
             }
 
             if constexpr (std::is_constructible_v<std::string, T>) {
