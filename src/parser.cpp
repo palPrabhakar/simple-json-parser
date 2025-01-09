@@ -5,6 +5,7 @@
 #include "parser.hpp"
 #include "tokenizer.hpp"
 
+namespace sjp {
 Json Parser::Parse() {
     Json json;
     Token token = tokenizer.PeekToken();
@@ -135,7 +136,7 @@ Json Parser::ParseObject() {
         }
         }
     }
-    if(tokenizer.GetToken().type != TokenType::right_braces) {
+    if (tokenizer.GetToken().type != TokenType::right_braces) {
         THROW_ERROR("Error parssing JSON object - expected '}'");
     }
     return Json{.type = JsonType::jobject,
@@ -186,9 +187,10 @@ Json Parser::ParseArray() {
         }
         }
     }
-    if(tokenizer.GetToken().type != TokenType::right_bracket) {
+    if (tokenizer.GetToken().type != TokenType::right_bracket) {
         THROW_ERROR("Error parssing JSON object - expected ']'");
     }
     return Json{.type = JsonType::jarray,
                 .value = std::make_shared<JsonArray>(std::move(arr))};
 }
+} // namespace sjp

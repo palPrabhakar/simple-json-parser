@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <vector>
 
+namespace sjp {
 enum class JsonType { jstring, jnumber, jnull, jbool, jobject, jarray };
 
 struct JNull {};
@@ -331,3 +332,4 @@ Json::InsertOrUpdateJson(std::string key, Json json) {
     auto ptr = std::static_pointer_cast<JsonObject>(value);
     ptr->InsertOrUpdate(key, std::move(json));
 }
+} // namespace sjp

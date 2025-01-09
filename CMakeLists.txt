@@ -26,5 +26,4 @@ endif()
 
 # Export the library for FetchContent or find_package
 export(TARGETS sjp FILE sjp-config.cmake)
-add_library(sjp::sjp ALIAS sjp)
 

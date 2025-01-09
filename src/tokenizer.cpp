@@ -4,6 +4,7 @@
 
 #include "tokenizer.hpp"
 
+namespace sjp {
 void Tokenizer::Advance() {
     if (token.type == TokenType::end)
         return;
@@ -154,3 +155,4 @@ void Tokenizer::SkipComments(bool multi) {
     }
     THROW_ERROR("Unexpected error parsing json string");
 }
+} // namespace sjp

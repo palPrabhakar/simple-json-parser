@@ -2,6 +2,8 @@
 #include <gtest/gtest.h>
 #include <sstream>
 
+using namespace sjp;
+
 Json parseJSON(std::istringstream json) {
     Parser parser(json);
     return parser.Parse();

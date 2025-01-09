@@ -4,10 +4,10 @@
 #include "tokenizer.hpp"
 #include <utility>
 
+namespace sjp {
 class Parser {
   public:
-    Parser(std::istream &json_stream)
-        : tokenizer(json_stream) {}
+    Parser(std::istream &json_stream) : tokenizer(json_stream) {}
 
     Json Parse();
 
@@ -22,3 +22,4 @@ class Parser {
 
     Tokenizer tokenizer;
 };
+} // namespace sjp

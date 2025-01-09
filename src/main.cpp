@@ -3,6 +3,8 @@
 #include "json.hpp"
 #include "parser.hpp"
 
+using namespace sjp;
+
 int main(void) {
     std::cout << "Simple JSON Parser" << std::endl;
 
