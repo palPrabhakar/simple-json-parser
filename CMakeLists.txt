@@ -9,22 +9,22 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_compile_options(-Wall -Wextra -Wpedantic -Wconversion -Wswitch)
 
-add_library(libsjp STATIC src/parser.cpp src/tokenizer.cpp)
+add_library(sjp STATIC src/parser.cpp src/tokenizer.cpp)
 
-target_include_directories(libsjp PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+target_include_directories(sjp PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-    add_executable(sjp src/main.cpp)
-    target_link_libraries(sjp PRIVATE libsjp)
+    add_executable(main src/main.cpp)
+    target_link_libraries(main PRIVATE sjp)
     enable_testing()
     find_package(GTest REQUIRED)
     add_executable(test_parser test/parser_test.cpp src/parser.cpp src/tokenizer.cpp)
-    target_link_libraries(test_parser PRIVATE libsjp GTest::gtest_main)
+    target_link_libraries(test_parser PRIVATE sjp GTest::gtest_main)
     include(GoogleTest)
     gtest_discover_tests(test_parser)
 endif()
 
 # Export the library for FetchContent or find_package
-export(TARGETS libsjp FILE libsjp.cmake)
-add_library(sjp::libsjp ALIAS libsjp)
+export(TARGETS sjp FILE sjp-config.cmake)
+add_library(sjp::sjp ALIAS sjp)
 
