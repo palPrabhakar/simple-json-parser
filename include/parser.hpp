@@ -6,8 +6,8 @@
 
 class Parser {
   public:
-    Parser(std::istringstream json_stream)
-        : tokenizer(std::move(json_stream)) {}
+    Parser(std::istream &json_stream)
+        : tokenizer(json_stream) {}
 
     Json Parse();
 

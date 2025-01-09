@@ -3,13 +3,13 @@
 #include <sstream>
 
 Json parseJSON(std::istringstream json) {
-    Parser parser(std::move(json));
+    Parser parser(json);
     return parser.Parse();
 }
 
 Json parseJSON(std::string json_str) {
     std::istringstream json(json_str);
-    Parser parser(std::move(json));
+    Parser parser(json);
     return parser.Parse();
 }
 

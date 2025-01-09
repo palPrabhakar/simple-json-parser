@@ -31,8 +31,8 @@ struct Token {
 
 class Tokenizer {
   public:
-    Tokenizer(std::istringstream stream)
-        : token_stream(std::move(stream)), token(TokenType::start, {}) {
+    Tokenizer(std::istream &stream)
+        : token_stream(stream), token(TokenType::start, {}) {
         Advance();
     }
 
@@ -45,7 +45,7 @@ class Tokenizer {
     Token PeekToken() const { return token; }
 
   private:
-    std::istringstream token_stream;
+    std::istream &token_stream;
     Token token;
 
     void Advance();

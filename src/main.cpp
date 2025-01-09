@@ -29,7 +29,7 @@ int main(void) {
 
     // {
     //     std::istringstream ss(R"([1, [2, [3]]])");
-    //     Parser parser(std::move(ss));
+    //     Parser parser(ss);
     //     auto json = parser.Parse();
     //     json.AppendOrUpdate(0, "lol");
     //     auto j1 = json.Get(1);
@@ -63,7 +63,7 @@ int main(void) {
     // {
     //     std::istringstream ss(
     //         R"({"1": "1", "2": {"2": "2", "3": {"3": "3"}}})");
-    //     Parser parser(std::move(ss));
+    //     Parser parser(ss);
     //     auto json = parser.Parse();
     //     json.InsertOrUpdate("1", "lol");
     //     auto j1 = json.Get("2");
