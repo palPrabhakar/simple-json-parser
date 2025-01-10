@@ -5,10 +5,13 @@
 #include <iostream>
 #include <memory>
 #include <optional>
+#include <ostream>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
+
+#define ESCAPE(x) "\"" << (x) << "\""
 
 namespace sjp {
 enum class JsonType { jstring, jnumber, jnull, jbool, jobject, jarray };
@@ -36,10 +39,7 @@ class Base {
         std::shared_ptr<Base> value;
         constexpr static size_t end = -1UL;
 
-        void Dump() const {
-            value->Print();
-            std::cout << "\n";
-        }
+        void Dump(std::ostream &out = std::cout) const { value->Print(out); }
 
         size_t Size() const { return value->Size(); }
 
@@ -127,11 +127,11 @@ class Base {
     };
 
     virtual ~Base() = default;
-    void Print() const { PrintImpl(); }
+    void Print(std::ostream &out) const { PrintImpl(out); }
     size_t Size() const { return SizeImpl(); }
 
   private:
-    virtual void PrintImpl() const = 0;
+    virtual void PrintImpl(std::ostream &) const = 0;
     virtual std::optional<Json> Get(size_t) { return std::nullopt; }
     virtual std::optional<Json> Get(std::string) { return std::nullopt; }
     virtual std::optional<std::string> GetString() { return std::nullopt; }
@@ -146,7 +146,13 @@ template <typename ValueType> class JsonValue : public Base {
     ValueType value;
 
   private:
-    void PrintImpl() const override { std::cout << value; }
+    void PrintImpl(std::ostream &out) const override {
+        if constexpr (std::is_same_v<ValueType, std::string>) {
+            out << ESCAPE(value);
+        } else {
+            out << value;
+        }
+    }
 
     std::optional<std::string> GetString() override {
         if constexpr (std::is_same_v<ValueType, std::string>) {
@@ -173,12 +179,12 @@ template <typename ValueType> class JsonValue : public Base {
     }
 };
 
-template <> inline void JsonValue<JNull>::PrintImpl() const {
-    std::cout << "null";
+template <> inline void JsonValue<JNull>::PrintImpl(std::ostream &out) const {
+    out << "null";
 }
 
-template <> inline void JsonValue<bool>::PrintImpl() const {
-    std::cout << (value ? "true" : "false");
+template <> inline void JsonValue<bool>::PrintImpl(std::ostream &out) const {
+    out << (value ? "true" : "false");
 }
 
 class JsonObject : public Base {
@@ -193,17 +199,17 @@ class JsonObject : public Base {
   private:
     std::unordered_map<std::string, Json> value;
 
-    void PrintImpl() const override {
-        std::cout << "{";
+    void PrintImpl(std::ostream &out) const override {
+        out << "{";
         if (!value.empty()) {
             auto &[key, val] = *value.begin();
-            std::cout << key << ": ";
-            val.value->Print();
+            out << ESCAPE(key) << ": ";
+            val.value->Print(out);
             for (auto i = ++value.begin(); i != value.end(); ++i) {
-                std::cout << ", ";
+                out << ", ";
                 auto &[key, val] = *i;
-                std::cout << key << ": ";
-                val.value->Print();
+                out << ESCAPE(key) << ": ";
+                val.value->Print(out);
             }
         }
         std::cout << "}";
@@ -231,18 +237,18 @@ class JsonArray : public Base {
   private:
     std::vector<Json> value;
 
-    void PrintImpl() const override {
-        std::cout << "[";
+    void PrintImpl(std::ostream &out) const override {
+        out << "[";
         if (!value.empty()) {
             auto &val = value[0];
-            val.value->Print();
+            val.value->Print(out);
             for (size_t i = 1; i < value.size(); ++i) {
-                std::cout << ", ";
+                out << ", ";
                 auto &val = value[i];
-                val.value->Print();
+                val.value->Print(out);
             }
         }
-        std::cout << "]";
+        out << "]";
     }
 
     size_t SizeImpl() const override { return value.size(); }
