@@ -208,7 +208,7 @@ class JsonObject : public Base {
                 val.value->Print(out);
             }
         }
-        std::cout << "}";
+        out << "}";
     }
 
     size_t SizeImpl() const override { return value.size(); }
