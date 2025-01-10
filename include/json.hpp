@@ -149,6 +149,10 @@ template <typename ValueType> class JsonValue : public Base {
     void PrintImpl(std::ostream &out) const override {
         if constexpr (std::is_same_v<ValueType, std::string>) {
             out << ESCAPE(value);
+        } else if constexpr (std::is_same_v<ValueType, JNull>) {
+            out << "null";
+        } else if constexpr (std::is_same_v<ValueType, bool>) {
+            out << (value ? "true" : "false");
         } else {
             out << value;
         }
@@ -178,14 +182,6 @@ template <typename ValueType> class JsonValue : public Base {
         }
     }
 };
-
-template <> inline void JsonValue<JNull>::PrintImpl(std::ostream &out) const {
-    out << "null";
-}
-
-template <> inline void JsonValue<bool>::PrintImpl(std::ostream &out) const {
-    out << (value ? "true" : "false");
-}
 
 class JsonObject : public Base {
   public:
