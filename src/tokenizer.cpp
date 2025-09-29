@@ -11,11 +11,11 @@ void Tokenizer::Advance() {
 
     char c;
     while (true) {
-        c = static_cast<char>(token_stream.peek());
-        if (c == std::istringstream::traits_type::eof()) {
+        if (token_stream.peek() == std::istringstream::traits_type::eof()) {
             token.type = TokenType::end;
             return;
         }
+        c = static_cast<char>(token_stream.peek());
         switch (c) {
         case '{': {
             token.type = TokenType::left_braces;
@@ -79,7 +79,8 @@ void Tokenizer::ReadQuotedString() {
     // first quote
     token_stream.get();
     char c = static_cast<char>(token_stream.peek());
-    while (c != '"' && c != std::istringstream::traits_type::eof()) {
+    while (token_stream.peek() != std::istringstream::traits_type::eof() &&
+           c != '"') {
         if (c == '\\') {
             value << static_cast<char>(token_stream.get());
             c = static_cast<char>(token_stream.peek());
@@ -90,7 +91,7 @@ void Tokenizer::ReadQuotedString() {
         value << static_cast<char>(token_stream.get());
         c = static_cast<char>(token_stream.peek());
     }
-    if (c == std::istringstream::traits_type::eof()) {
+    if (token_stream.peek() == std::istringstream::traits_type::eof()) {
         THROW_ERROR("Unexpected end of parsing");
     }
     token_stream.get();
@@ -107,8 +108,8 @@ void Tokenizer::ReadValue() {
         }
         token_stream.get();
         c = static_cast<char>(token_stream.peek());
-    } while (c != '}' && c != ',' && c != ']' &&
-             c != std::istringstream::traits_type::eof());
+    } while (token_stream.peek() != std::istringstream::traits_type::eof() &&
+             c != '}' && c != ',' && c != ']');
 
     if (value.str() == "null") {
         token.type = TokenType::jnull;

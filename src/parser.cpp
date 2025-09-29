@@ -7,6 +7,7 @@
 
 namespace sjp {
 Json Parser::Parse() {
+    std::cout<<"Parse()"<<std::endl;
     Json json;
     Token token = tokenizer.PeekToken();
     switch (token.type) {
