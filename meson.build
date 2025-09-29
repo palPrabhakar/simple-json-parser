@@ -14,12 +14,13 @@ add_project_arguments(
   language : 'cpp'
 )
 
+inc_dir = include_directories('include')
+
 # The library
 sjp_lib = static_library(
   'sjp',
   ['src/parser.cpp', 'src/tokenizer.cpp'],
-  include_directories : include_directories('include'),
-  install : true
+  include_directories : inc_dir,
 )
 
 # Main executable (only built if this is the main project)
@@ -28,7 +29,7 @@ if meson.is_subproject() == false
     'main',
     'src/main.cpp',
     link_with : sjp_lib,
-    include_directories : include_directories('include')
+    include_directories : inc_dir
   )
 
   # Enable testing
@@ -43,9 +44,11 @@ if meson.is_subproject() == false
       ['test/parser_test.cpp'],
       link_with : sjp_lib,
       dependencies : test_deps,
-      include_directories : include_directories('include')
+      include_directories : inc_dir
     )
     test('parser tests', test_exe)
   endif
 endif
+
+libsjp_dep = declare_dependency(include_directories: inc_dir, link_with: sjp_lib)
 
